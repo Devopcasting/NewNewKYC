@@ -14,9 +14,8 @@ class TextCoordinates:
         elif self.lang_type == "regional":
             tesseract_config = r'--oem 3 --psm 11'
             data = pytesseract.image_to_data(self.image_path, output_type=pytesseract.Output.DICT, lang="hin+eng", config=tesseract_config)
-        # else:
-        #     tesseract_config = r'--oem 3 --psm 11'
-        #     data = pytesseract.image_to_data(self.image_path, output_type=pytesseract.Output.DICT, lang="eng", config=tesseract_config)
+        elif self.lang_type == "dllang":
+            data = pytesseract.image_to_data(self.image_path, output_type=pytesseract.Output.DICT, lang="eng")
         
         coordinates = []
         for i in range(len(data['text'])):
