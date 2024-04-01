@@ -78,6 +78,15 @@ class AadhaarCardDocumentInfo:
                 """Collect DOB"""
                 dob = self._extract_dob()
                 aadhaarcard_doc_info_list.append(dob)
+
+                """Check if all the dictionaries in the list are empty"""
+                all_keys_and_coordinates_empty =  all(all(not v for v in d.values()) for d in aadhaarcard_doc_info_list)
+                if all_keys_and_coordinates_empty:
+                    self.logger.error(f"| Unable to extract Aadhaar document information")
+                    return {"message": "Unable to extract Aadhaar document information", "status": "REJECTED"}
+                else:
+                    self.logger.info(f"| Successfully Redacted Aadhaar Document")
+                    return {"message": "Successfully Redacted Aadhaar Document", "status": "REDACTED", "data": aadhaarcard_doc_info_list}
             else:
                 pass
         except Exception as e:
