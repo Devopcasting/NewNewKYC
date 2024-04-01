@@ -2,8 +2,11 @@ import pytesseract
 import cv2
 from helper.clean_text import CleanText
 from documents.cdsl.identify_cdsl import IdentifyCDSLDocument
+from documents.e_pancard.identify_e_pancard import IdentifyEPanCardDocument
 from documents.pancard.identify_pancard import IdentifyPancardDocument
 from documents.aadhaarcard.identify_aadhaarcard import IdentifyAadhaarCardDocument
+from documents.passport.identify_passport import IdentifyPassportDocument
+from documents.drivinglic.identify_drivinglic import IdentifyDrivingLicenseDocument
 
 class IdentifyDocumentType:
     def __init__(self, document_path: str) -> None:
@@ -15,14 +18,17 @@ class IdentifyDocumentType:
         """Initialize document identification objects"""
         self.document_identification_objects = {
             "CDSL": IdentifyCDSLDocument(clean_data_text).check_cdsl_document(),
+            "E-PAN": IdentifyEPanCardDocument(clean_data_text).check_e_pancard_document(),
             "PANCARD": IdentifyPancardDocument(clean_data_text).check_pancard_document(),
             "E-Aadhaar": IdentifyAadhaarCardDocument(clean_data_text).check_e_aadhaarcard_document(),
-            "Aadhaar": IdentifyAadhaarCardDocument(clean_data_text).check_aadhaarcard_document()
+            "Aadhaar": IdentifyAadhaarCardDocument(clean_data_text).check_aadhaarcard_document(),
+            "Passport": IdentifyPassportDocument(clean_data_text).check_passport_document(),
+            "DrivingLIC": IdentifyDrivingLicenseDocument(clean_data_text).check_dl_document()
         }
         
     def _get_text_from_image_doc(self) -> dict:
         if self._check_rgb_image():
-            tesseract_config = r'-l eng --oem 3 --psm 11'
+            tesseract_config = r'-l eng --oem 3'
         else:
             tesseract_config = r'-l eng --oem 3 --psm 11'
 
