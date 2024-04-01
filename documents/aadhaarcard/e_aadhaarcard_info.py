@@ -345,8 +345,8 @@ class EAadhaarCardDocumentInfo:
                 for state_pattern in self.states:
                     if re.search(state_pattern, text, re.IGNORECASE):
                         place_coordinates.append([x1, y1, x2, y2])
-                        place_name_name += " "+ text
-                        break
+                        place_name += " "+ text
+                        
             if not place_coordinates:
                 return result
         
