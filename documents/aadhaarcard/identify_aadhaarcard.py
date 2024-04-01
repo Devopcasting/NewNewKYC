@@ -3,12 +3,11 @@ import re
 class IdentifyAadhaarCardDocument:
     def __init__(self, clean_text: list) -> None:
         self.clean_text = clean_text
-        print(self.clean_text)
         # Regular expression pattern for Aadhaar card identifiers
         self.aadhaarcard_regex = r"\b(?:enrollment|enrolment|UniqualidentificationsAuthority|enroliment|/enrolment|male|female|help@uidal.gov.in|government|government of india|www.uidal.gov.in|unique identification authority of india|aadhaar)\b"
        
         # Regular expression pattern for E-Aadhaar card identifiers
-        self.eaadhaarcard_regex = r"\b(?:enrollment|enrolment|enroliment|/enrolment)\b"
+        self.eaadhaarcard_regex = r"\b(?:enrollment|enrolment|enroliment|/enrolment|enrallment)\b"
 
         # Regular expression pattern for Aadhaar card identifiers
         self.aadhaar_card_regex = r"\b(?:uidal.gov.in|male|female|government of india|UniqualidentificationsAuthority)\b"
