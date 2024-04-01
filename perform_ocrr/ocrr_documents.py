@@ -9,9 +9,12 @@ from write_xml.redacted_document import WriteRedactedDocumentXML
 from webhook.webhook_post_request import WebhookHandler
 from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
 from documents.cdsl.document_info import CDSLDocumentInfo
+from documents.e_pancard.document_info import EPancardDocumentInfo
 from documents.pancard.document_info import PancardDocumentInfo
 from documents.aadhaarcard.e_aadhaarcard_info import EAadhaarCardDocumentInfo
 from documents.aadhaarcard.aadhaarcard_info import AadhaarCardDocumentInfo
+from documents.passport.document_info import PassportDocumentInfo
+from documents.drivinglic.document_info import DrivingLicenseDocumentInfo
 from pathlib import Path
 
 class PerformOCRROnDocuments:
@@ -29,9 +32,12 @@ class PerformOCRROnDocuments:
             docuement_identification_obj = IdentifyDocumentType(self.document_info['documentPath'])
             processing_ocrr_document_methods = [
                 (docuement_identification_obj.identify_document_type("CDSL"), self._cdsl_ocrr_process),
+                (docuement_identification_obj.identify_document_type("E-PAN"), self._e_pancard_ocrr_process),
                 (docuement_identification_obj.identify_document_type("PANCARD"), self._pancard_ocrr_process),
                 (docuement_identification_obj.identify_document_type("E-Aadhaar"), self._e_aadhaar_ocrr_process),
-                (docuement_identification_obj.identify_document_type("Aadhaar"), self._aadhaar_ocrr_process)
+                (docuement_identification_obj.identify_document_type("Aadhaar"), self._aadhaar_ocrr_process),
+                (docuement_identification_obj.identify_document_type("Passport"), self._passport_ocrr_process),
+                (docuement_identification_obj.identify_document_type("DrivingLIC"), self._driving_lic_ocrr_process)
             ]
             documentIdentified = False
             """Identify document"""
@@ -96,6 +102,12 @@ class PerformOCRROnDocuments:
         status = result['status']
         self._perform_ocrr(status, result, document_path, redactedPath, documentName, taskid)
     
+    def _e_pancard_ocrr_process(self, document_path, redactedPath, documentName, taskid):
+        self.logger.info(f"| Performing OCRR on E-Pancard document taskid: {taskid}")
+        result = EPancardDocumentInfo(document_path).collect_e_pancard_document_info()
+        status = result['status']
+        self._perform_ocrr(status, result, document_path, redactedPath, documentName, taskid)
+    
     def _pancard_ocrr_process(self, document_path, redactedPath, documentName, taskid):
         self.logger.info(f"| Performing OCRR on Pancard document taskid: {taskid}")
         result = PancardDocumentInfo(document_path).collect_pancard_document_info()
@@ -113,6 +125,19 @@ class PerformOCRROnDocuments:
         result = AadhaarCardDocumentInfo(document_path).collect_aadhaarcard_info()
         status = result['status']
         self._perform_ocrr(status, result, document_path, redactedPath, documentName, taskid)
+    
+    def _passport_ocrr_process(self, document_path, redactedPath, documentName, taskid):
+        self.logger.info(f"| Performing OCRR on Passport document taskid: {taskid}")
+        result = PassportDocumentInfo(document_path).collect_passport_document_info()
+        status = result['status']
+        self._perform_ocrr(status, result, document_path, redactedPath, documentName, taskid)
+
+    def _driving_lic_ocrr_process(self, document_path, redactedPath, documentName, taskid):
+        self.logger.info(f"| Performing OCRR on Driving License document taskid: {taskid}")
+        result = DrivingLicenseDocumentInfo(document_path).collect_dl_doc_info()
+        status = result['status']
+        self._perform_ocrr(status, result, document_path, redactedPath, documentName, taskid)
+
 
     def _remove_collection_doc_from_workspace_ocrr(self, taskid):
         database_name = "ocrrworkspace"
