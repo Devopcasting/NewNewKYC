@@ -11,6 +11,7 @@ from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
 from documents.cdsl.document_info import CDSLDocumentInfo
 from documents.pancard.document_info import PancardDocumentInfo
 from documents.aadhaarcard.e_aadhaarcard_info import EAadhaarCardDocumentInfo
+from documents.aadhaarcard.aadhaarcard_info import AadhaarCardDocumentInfo
 from pathlib import Path
 
 class PerformOCRROnDocuments:
@@ -29,7 +30,8 @@ class PerformOCRROnDocuments:
             processing_ocrr_document_methods = [
                 (docuement_identification_obj.identify_document_type("CDSL"), self._cdsl_ocrr_process),
                 (docuement_identification_obj.identify_document_type("PANCARD"), self._pancard_ocrr_process),
-                (docuement_identification_obj.identify_document_type("E-Aadhaar"), self._e_aadhaar_ocrr_process)
+                (docuement_identification_obj.identify_document_type("E-Aadhaar"), self._e_aadhaar_ocrr_process),
+                (docuement_identification_obj.identify_document_type("Aadhaar"), self._aadhaar_ocrr_process)
             ]
             documentIdentified = False
             """Identify document"""
@@ -106,7 +108,12 @@ class PerformOCRROnDocuments:
         status = result['status']
         self._perform_ocrr(status, result, document_path, redactedPath, documentName, taskid)
 
-    
+    def _aadhaar_ocrr_process(self, document_path, redactedPath, documentName, taskid):
+        self.logger.info(f"| Performing OCRR on Aadhaar document taskid: {taskid}")
+        result = AadhaarCardDocumentInfo(document_path).collect_aadhaarcard_info()
+        status = result['status']
+        self._perform_ocrr(status, result, document_path, redactedPath, documentName, taskid)
+
     def _remove_collection_doc_from_workspace_ocrr(self, taskid):
         database_name = "ocrrworkspace"
         collection_name = "ocrr"
