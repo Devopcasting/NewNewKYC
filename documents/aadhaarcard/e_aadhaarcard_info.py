@@ -30,11 +30,8 @@ class EAadhaarCardDocumentInfo:
         self.coordinates = TextCoordinates(self.document_path, lang_type=None).generate_text_coordinates()
         self.coordinates_default = TextCoordinates(self.document_path, lang_type="default").generate_text_coordinates()
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
-        #print(self.coordinates_default)
-        #print(self.coordinates)
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng")
-        #print(self.text_data)
     
     def _extract_dob(self) -> dict:
         result = {

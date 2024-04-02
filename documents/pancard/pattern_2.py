@@ -108,7 +108,6 @@ class PancardPattern2:
 
             """Create Reverse list"""
             reverse_line_list = split_text_list[::-1]
-            print(reverse_line_list)
 
             """Matching patterns"""
             date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}'

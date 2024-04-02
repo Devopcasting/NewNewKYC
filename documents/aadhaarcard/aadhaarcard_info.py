@@ -29,11 +29,9 @@ class AadhaarCardDocumentInfo:
     def _extract_text_coordinates(self):
         self.coordinates_default = TextCoordinates(self.document_path, lang_type="default").generate_text_coordinates()
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
-        print(self.coordinates_default)
         self.text_data_default = pytesseract.image_to_string(self.document_path)
-        tesseract_config = r'--oem 3 --psm 11'
+        tesseract_config = r'--oem 3 --psm 13'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
-        #print(self.text_data)
     
     def _extract_dob(self):
         result = {
@@ -337,7 +335,6 @@ class AadhaarCardDocumentInfo:
 
     def collect_aadhaarcard_info(self):
         aadhaarcard_doc_info_list = []
-
         try:
             """Get the redaction level"""
             if self.DOCUMENT_REDACTION_LEVEL == 1:

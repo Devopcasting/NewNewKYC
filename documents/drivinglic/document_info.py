@@ -24,9 +24,7 @@ class DrivingLicenseDocumentInfo:
     
     def _extract_text_coordinates(self):
         self.coordinates = TextCoordinates(self.document_path, lang_type="dllang" ).generate_text_coordinates()
-        #print(self.coordinates)
         self.text_data = pytesseract.image_to_string(self.document_path, lang="eng")
-        #print(self.text_data)
 
     def _extract_dl_number(self):
         result = {
