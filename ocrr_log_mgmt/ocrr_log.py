@@ -17,7 +17,6 @@ class OCRREngineLogging:
             formatter = logging.Formatter('%(process)d %(asctime)s %(levelname)s %(message)s')
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
-
         return logger
 
     def _get_log_path(self):
@@ -26,4 +25,8 @@ class OCRREngineLogging:
         return config['Paths']['logs'] if 'Paths' in config else os.getcwd()
 
     def _file_handler_exists(self, logger):
+        if not os.path.isfile(self.log_file):
+            # Create the log file if it doesn't exist
+            open(self.log_file, 'a').close()
+            return False
         return any(isinstance(handler, logging.FileHandler) and handler.baseFilename == self.log_file for handler in logger.handlers)
