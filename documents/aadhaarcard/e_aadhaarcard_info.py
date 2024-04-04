@@ -32,6 +32,8 @@ class EAadhaarCardDocumentInfo:
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng")
+        #print(self.coordinates)
+        #print(self.coordinates_regional)
     
     def _extract_dob(self) -> dict:
         result = {
@@ -397,37 +399,37 @@ class EAadhaarCardDocumentInfo:
                 dob = self._extract_dob()
                 e_aadhaarcard_doc_info_list.append(dob)
 
-                """Collect Gender"""
-                gender = self._extract_gender()
-                e_aadhaarcard_doc_info_list.append(gender)
+                # """Collect Gender"""
+                # gender = self._extract_gender()
+                # e_aadhaarcard_doc_info_list.append(gender)
 
-                """Collect Aadhaar Number"""
-                aadhaar_number = self._extract_aadhaar_number()
-                e_aadhaarcard_doc_info_list.append(aadhaar_number)
+                # """Collect Aadhaar Number"""
+                # aadhaar_number = self._extract_aadhaar_number()
+                # e_aadhaarcard_doc_info_list.append(aadhaar_number)
 
-                """Collect Name in english"""
-                name_in_eng = self._extract_name_in_english()
-                e_aadhaarcard_doc_info_list.append(name_in_eng)
+                # """Collect Name in english"""
+                # name_in_eng = self._extract_name_in_english()
+                # e_aadhaarcard_doc_info_list.append(name_in_eng)
 
-                """Collect Name in native"""
-                name_in_native = self._extact_name_in_native()
-                e_aadhaarcard_doc_info_list.append(name_in_native)
+                # """Collect Name in native"""
+                # name_in_native = self._extact_name_in_native()
+                # e_aadhaarcard_doc_info_list.append(name_in_native)
 
-                """Collect Mobile number"""
-                mobile_number = self._extract_mobile_number()
-                e_aadhaarcard_doc_info_list.append(mobile_number)
+                # """Collect Mobile number"""
+                # mobile_number = self._extract_mobile_number()
+                # e_aadhaarcard_doc_info_list.append(mobile_number)
 
-                """Collect Pin code"""
-                pincode = self._extract_pin_code()
-                e_aadhaarcard_doc_info_list.append(pincode)
+                # """Collect Pin code"""
+                # pincode = self._extract_pin_code()
+                # e_aadhaarcard_doc_info_list.append(pincode)
 
-                """Collect Place name"""
-                places = self._extract_palces()
-                e_aadhaarcard_doc_info_list.append(places)
+                # """Collect Place name"""
+                # places = self._extract_palces()
+                # e_aadhaarcard_doc_info_list.append(places)
 
-                """Collect QR-Code"""
-                qrcodes = self._extract_qrcode()
-                e_aadhaarcard_doc_info_list.append(qrcodes)
+                # """Collect QR-Code"""
+                # qrcodes = self._extract_qrcode()
+                # e_aadhaarcard_doc_info_list.append(qrcodes)
 
                 """Check if all the dictionaries in the list are empty"""
                 all_keys_and_coordinates_empty =  all(all(not v for v in d.values()) for d in e_aadhaarcard_doc_info_list)

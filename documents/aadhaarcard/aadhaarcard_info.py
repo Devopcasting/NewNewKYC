@@ -28,10 +28,13 @@ class AadhaarCardDocumentInfo:
     
     def _extract_text_coordinates(self):
         self.coordinates_default = TextCoordinates(self.document_path, lang_type="default").generate_text_coordinates()
+        #print(self.coordinates_default)
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         tesseract_config = r'--oem 3 --psm 13'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
+        #print(self.coordinates_regional)
+        #print(self.text_data_regional)
     
     def _extract_dob(self):
         result = {
@@ -51,7 +54,7 @@ class AadhaarCardDocumentInfo:
                     dob_coordinates = [x1, y1, x2, y2]
                     dob_text = text
                     break
-        
+
             if not dob_coordinates:
                 return result
         
@@ -82,7 +85,14 @@ class AadhaarCardDocumentInfo:
                     gender_text = text
                     break
             if not gender_coordinates:
-                return result
+                """Try getting the coordinates from coordinates_regional"""
+                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
+                    if re.search(gender_pattern, text, flags=re.IGNORECASE):
+                        gender_text = text
+                        gender_coordinates.append([self.coordinates_regional[i -1][0], self.coordinates_regional[i -1][1], x2, y2])
+                        break
+                if not gender_coordinates:
+                    return result
             
             result = {
                 "Aadhaar Gender": gender_text,
@@ -102,6 +112,7 @@ class AadhaarCardDocumentInfo:
             aadhaarcard_text = ""
             aadhaarcard_coordinates = []
             text_coordinates = []
+            UseRegionalCoords = False
 
             """get the index of male/female"""
             matching_index = None
@@ -111,10 +122,21 @@ class AadhaarCardDocumentInfo:
                     matching_index = i
 
             if matching_index is None:
-                return result
+                """Try getting the index from coordinates_regional"""
+                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
+                    if re.search(gender_pattern, text, flags=re.IGNORECASE):
+                        matching_index = i
+                        UseRegionalCoords = True
+                if matching_index is None:
+                    return result
         
             """get the coordinates of aadhaar card number"""
-            for i in range(matching_index, len(self.coordinates_default)):
+            if UseRegionalCoords:
+                use_this_coords = self.coordinates_regional
+            else:
+                use_this_coords = self.coordinates_default
+
+            for i in range(matching_index, len(use_this_coords)):
                 text = self.coordinates_default[i][4]
                 if len(text) == 4 and text.isdigit() and text[:2] != '19':
                     text_coordinates.append((text))
@@ -138,7 +160,7 @@ class AadhaarCardDocumentInfo:
 
     def _extract_name_in_eng(self):
         result = {
-            "Aadhaar Name": "",
+            "Aadhaar Name in English": "",
             "coordinates": []
             }
         try:
@@ -175,22 +197,22 @@ class AadhaarCardDocumentInfo:
         
             if len(name_text_split) > 1:
                 result = {
-                    "Aadhaar Name": name_text,
+                    "Aadhaar Name in English": name_text,
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[-1][2], name_coordinates[-1][3]]]
                 }
             else:
                 result = {
-                    "Aadhaar Name": name_text,
+                    "Aadhaar Name in English": name_text,
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[0][2], name_coordinates[0][3]]]
             }
             return result
         except Exception as e:
-            self.logger.error(f"| Aadhaar Name: {e}")
+            self.logger.error(f"| Aadhaar Name in English: {e}")
             return result
     
     def _extract_name_in_native(self):
         result = {
-            "Aadhaar Name": "",
+            "Aadhaar Name in Native": "",
             "coordinates": []
             }
         try:
@@ -223,17 +245,17 @@ class AadhaarCardDocumentInfo:
         
             if len(name_text_split) > 1:
                 result = {
-                    "Aadhaar Name": name_text,
+                    "Aadhaar Name in Native": name_text,
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[-1][2], name_coordinates[-1][3]]]
                 }
             else:
                 result = {
-                    "Aadhaar Name": name_text,
+                    "Aadhaar Name in Native": name_text,
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[0][2], name_coordinates[0][3]]]
                 }
             return result
         except Exception as e:
-            self.logger.error(f"| Aadhaar Name: {e}")
+            self.logger.error(f"| Aadhaar Name in Native: {e}")
             return result
 
     def _extract_palces(self):
