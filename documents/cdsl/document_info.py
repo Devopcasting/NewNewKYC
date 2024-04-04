@@ -111,10 +111,12 @@ class CDSLDocumentInfo:
             """Get the redaction level"""
             if self.DOCUMENT_REDACTION_LEVEL == 1:
                 """Collect: Pancard Number Coordinates"""
-                cdsl_doc_info_list.append(self._extract_pancard_number())
+                pancard_number = self._extract_pancard_number()
+                cdsl_doc_info_list.append(pancard_number)
 
                 """Collect: Username"""
-                cdsl_doc_info_list.append(self._extract_username())
+                username = self._extract_username()
+                cdsl_doc_info_list.append(username)
 
                 """Check if all the dictionaries in the list are empty"""
                 all_keys_and_coordinates_empty =  all(all(not v for v in d.values()) for d in cdsl_doc_info_list)
@@ -128,14 +130,14 @@ class CDSLDocumentInfo:
                 if len(pancard_number['coordinates']) == 0:
                     self.logger.error(f"| Unable to extract Pancard Number from CDSL")
                     return {"message": "Unable to extract Pancard Number from CDSL", "status": "REJECTED"}
-                cdsl_doc_info_list.append()
+                cdsl_doc_info_list.append(pancard_number)
 
                 """Collect: Username"""
                 username = self._extract_username()
                 if len(username['coordinates']) == 0:
                     self.logger.error(f"| Unable to extract Username from CDSL")
                     return {"message": "Unable to extract Username from CDSL", "status": "REJECTED"}
-                cdsl_doc_info_list.append()
+                cdsl_doc_info_list.append(username)
 
                 return {"message": "Successfully Redacted CDSL Document", "status": "REDACTED", "data": cdsl_doc_info_list}
 
