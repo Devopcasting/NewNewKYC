@@ -6,7 +6,6 @@ from document_type_identification.identify_documents import IdentifyDocumentType
 from write_xml.rejected_doc_coordinates import GetRejectedDocumentCoordinates
 from write_xml.rejected_document import WriteRejectedDocumentXML
 from write_xml.redacted_document import WriteRedactedDocumentXML
-from webhook.webhook_post_request import WebhookHandler
 from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
 from documents.cdsl.document_info import CDSLDocumentInfo
 from documents.e_pancard.document_info import EPancardDocumentInfo
@@ -59,14 +58,7 @@ class PerformOCRROnDocuments:
             self._remove_collection_doc_from_workspace_ocrr(self.document_info['taskId'])
 
             """Send POST request to WebHOOK"""
-            # if not self._webhook_post_request(self.db_client):
-            #     sys.exit(1)
-            # else:
-            #     self.logger.info(f"| Successfully sent webhook POST request for document task id : {self.document_info['taskId']}")
             #self._webhook_post_request(self.document_info['taskId'])
-
-            """Close Database connection"""
-            self.db_client.close()
 
         except Exception as e:
             self.logger.error(f"| Performing OCRR: {e}")
@@ -138,7 +130,6 @@ class PerformOCRROnDocuments:
         status = result['status']
         self._perform_ocrr(status, result, document_path, redactedPath, documentName, taskid)
 
-
     def _remove_collection_doc_from_workspace_ocrr(self, taskid):
         database_name = "ocrrworkspace"
         collection_name = "ocrr"
@@ -177,45 +168,45 @@ class PerformOCRROnDocuments:
         path = Path(document_path)
         path.unlink()
     
-    def _webhook_post_request(self, taskid) -> bool:
-        webhook_handler = WebhookHandler(self.db_client, taskid)
-        return webhook_handler.post_request()
-        # try:
-        #     database_name = "upload"
-        #     collection_name = "fileDetails"
-        #     database = self.db_client[database_name]
-        #     collection = database[collection_name]
+    def _webhook_post_request(self, taskid):
+        try:
+            database_name = "upload"
+            collection_name = "fileDetails"
+            database = self.db_client[database_name]
+            collection = database[collection_name]
 
-        #     taskid_to_filter = {"taskId": taskid}
-        #     result = collection.find_one(taskid_to_filter)
+            taskid_to_filter = {"taskId": taskid}
+            result = collection.find_one(taskid_to_filter)
 
-        #     if not result:
-        #         self.logger.error(f"| No document found for task ID: {taskid}")
-        #         return
+            if not result:
+                self.logger.error(f"| No document found for task ID: {taskid}")
+                return
             
-        #     client_id = result['clientId']
-        #     payload = {
-        #         "taskId": result['taskId'],
-        #         "status": result["status"],
-        #         "taskResult": result["taskResult"],
-        #         "clientId": result["clientId"],
-        #         "uploadDir": result["uploadDir"]
-        #     }
+            client_id = result['clientId']
+            payload = {
+                "taskId": result['taskId'],
+                "status": result["status"],
+                "taskResult": result["taskResult"],
+                "clientId": result["clientId"],
+                "uploadDir": result["uploadDir"]
+            }
 
-        #     """Get Client Webhook URL from webhook DB"""
-        #     collection_name = "webhooks"
-        #     database = self.db_client[database_name]
-        #     collection = database[collection_name]
-        #     filter_query = {"clientId": client_id}
-        #     client_doc = collection.find_one(filter_query)
-        #     if client_doc:
-        #         WEBHOOK_URL = client_doc["url"]
-        #         HEADER = {'Content-Type': 'application/json'}
-        #         response = requests.post(WEBHOOK_URL+"/CVCore/processstatus", data=json.dumps(payload), headers=HEADER)
-        #         if response.status_code != 200:
-        #             self.logger.error(f"| Connecting to WebHOOK: {response.status_code}")
-        #     else:
-        #         self.logger.error(f"| Webhook URL not found for client ID: {client_id}")
-        # except Exception as e:
-        #     self.logger.error(f"| Webhook POST request: {e}")
-        #     sys.exit(1)
+            """Get Client Webhook URL from webhook DB"""
+            collection_name = "webhooks"
+            database = self.db_client[database_name]
+            collection = database[collection_name]
+            filter_query = {"clientId": client_id}
+            client_doc = collection.find_one(filter_query)
+            if client_doc:
+                WEBHOOK_URL = client_doc["url"]
+                HEADER = {'Content-Type': 'application/json'}
+                response = requests.post(WEBHOOK_URL+"/CVCore/processstatus", data=json.dumps(payload), headers=HEADER)
+                if response.status_code != 200:
+                    self.logger.error(f"| Connecting to WebHOOK: {response.status_code}")
+                    sys.exit(1)
+            else:
+                self.logger.error(f"| Webhook URL not found for client ID: {client_id}")
+                sys.exit(1)
+        except Exception as e:
+            self.logger.error(f"| Webhook POST request: {e}")
+            sys.exit(1)
