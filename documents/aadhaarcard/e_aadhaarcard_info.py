@@ -32,6 +32,7 @@ class EAadhaarCardDocumentInfo:
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng")
+        #print(self.coordinates_default)
         #print(self.coordinates)
         #print(self.coordinates_regional)
     
@@ -43,32 +44,39 @@ class EAadhaarCardDocumentInfo:
         try:
             dob_text = ""
             dob_coordinates = []
-            date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}|\d{4}'
-
+            dob_coords = []
+            split_pattern = "/"
+            date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}|\d{4}|\d{2}/\d{4}|\d{2}/\d{2}'
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 match = re.search(date_pattern, text)
                 if match:
-                    if self._validate_date(text, '/'):
-                        dob_coordinates = [x1, y1, x2, y2]
-                        dob_text = text
-                        break
-            if not dob_coordinates:
+                    if "-" in text:
+                        split_pattern = "-"
+                    if self._validate_date(text, split_pattern):
+                        dob_coords.append([x1, y1, x2, y2])
+                        dob_text += " "+ text
+                        
+            if not dob_coords:
                 """Check with other coordinates"""
                 for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates):
                     match = re.search(date_pattern, text)
                     if match:
-                        if self._validate_date(text, '/'):
-                             dob_coordinates = [x1, y1, x2, y2]
-                             dob_text = text
-                             break
-                if not dob_coordinates:
+                        if "-" in text:
+                            split_pattern = "-"
+                        if self._validate_date(text, split_pattern):
+                             dob_coords.append([x1, y1, x2, y2])
+                             dob_text += " "+ text
+                if not dob_coords:
                     return result
-            
-            """Get the first 6 chars coordinates"""
-            width = dob_coordinates[2] - dob_coordinates[0]
+                
+            for i in dob_coords:
+                """Get the first 6 chars coordinates"""
+                width = i[2] - i[0]
+                dob_coordinates.append([i[0], i[1], i[0] + int(0.54 * width), i[3]])
+
             result = {
                 "E-Aadhaar DOB": dob_text,
-                "coordinates": [[dob_coordinates[0], dob_coordinates[1], dob_coordinates[0] + int(0.54 * width), dob_coordinates[3]]]
+                "coordinates": dob_coordinates
             }
             return result
         except Exception as e:
@@ -80,7 +88,7 @@ class EAadhaarCardDocumentInfo:
             # Split the date string into day, month, and year
             day, month, year = map(int, date_str.split(split_pattern))
             # Check if the date is within valid ranges
-            if not (1 <= day <= 31 and 1 <= month <= 12 and 1000 <= year <= 9999):
+            if not (1 <= day <= 31 and 1 <= month <= 12 and 1000 <= year <= 2999):
                 return False
             # Check for leap year if necessary
             if month == 2 and day > 28 and not (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)):
