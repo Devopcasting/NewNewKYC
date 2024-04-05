@@ -26,6 +26,8 @@ class PassportDocumentInfo:
         self.coordinates = TextCoordinates(self.document_path).generate_text_coordinates()
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data = pytesseract.image_to_string(self.document_path, lang="eng", config=tesseract_config)
+        print(self.coordinates)
+        #print(self.text_data)
     
     def _extract_passport_number(self):
         result = {
@@ -34,66 +36,54 @@ class PassportDocumentInfo:
             }
         try:
             passport_number = ""
-            matching_line_index_top = None
-            matching_line_index_bottom = None
-            matching_passport_text = None
+            matching_line_index = None
             matching_text_regex =  r"\b(?:jpassport|passport|pusepart|passpon|ipassport)\b"
-            matching_passport_number_coords_top = []
-            matching_passport_number_coords_bottom = []
+            passport_number_coordinates = []
 
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if re.search(matching_text_regex, text.lower(), flags=re.IGNORECASE):
-                    matching_line_index_top = i
+                    matching_line_index = i
                     break
-            if matching_line_index_top is None:
 
-                check_passport_string = lambda s: re.match(r'^[A-Z][0-9]{7}$', s) is not None
+            if matching_line_index is None:
                 """Direct check"""
+                check_passport_string = lambda s: re.match(r'^[A-Z][0-9]{7}$', s) is not None
                 for x1,y1,x2,y2,text in self.coordinates:
                     if check_passport_string(text):
-                        matching_passport_number_coords_top = [x1, y1, x2, y2]
+                        passport_number_coordinates = [x1, y1, x2, y2]
                         passport_number = text
                         break
-                if not matching_passport_number_coords_top:
-                    return result
-                result = {
-                    "Passport Number": passport_number,
-                    "coordinates": [matching_passport_number_coords_top]
-                    }
-                return result
+                if not passport_number_coordinates:
+                    """Check for 8 digit number"""
+                    for x1,y1,x2,y2,text in self.coordinates:
+                        if len(text) in (7,8) and text.isdigit():
+                            passport_number = text
+                            passport_number_coordinates = [x1, y1, x2, y2]
+                            break
+                    if not passport_number_coordinates:
+                        return result
             else:
-                """get the top passport number coordinates"""
-                for i in range(matching_line_index_top, len(self.coordinates)):
+                for i in range(matching_line_index, len(self.coordinates)):
                     text = self.coordinates[i][4]
-                    if len(text) == 8 and text.isupper() and text.isalnum():
-                        matching_passport_number_coords_top = [self.coordinates[i][0], self.coordinates[i][1],
-                                         self.coordinates[i][2], self.coordinates[i][3]]
-                    matching_line_index_bottom = i
-                    matching_passport_text = text
-                    passport_number = text
-                    break
-                if matching_line_index_bottom is None:
-                    return result
-                
-                """get the bottom passport number coordinates"""
-                for i in range(matching_line_index_bottom + 1, len(self.coordinates)):
-                    text = self.coordinates[i][4]
-                    if matching_passport_text in text:
-                        matching_passport_number_coords_bottom = [self.coordinates[i][0], self.coordinates[i][1],
-                                         self.coordinates[i][2], self.coordinates[i][3]]
+                    if len(text) in (7,8) and text.isupper() and text.isdigit():
+                        passport_number = text
+                        passport_number_coordinates = [self.coordinates[i][0], self.coordinates[i][1],
+                                                       self.coordinates[i][2], self.coordinates[i][3]]
                         break
-                if matching_passport_number_coords_bottom:
-                    result = {
-                        "Passport Number": passport_number,
-                        "coordinates": [matching_passport_number_coords_top, matching_passport_number_coords_bottom]
+                    elif len(text) in (7,8) and text.isdigit():
+                        passport_number = text
+                        passport_number_coordinates = [self.coordinates[i][0], self.coordinates[i][1],
+                                                       self.coordinates[i][2], self.coordinates[i][3]]
+                        break
+                if not passport_number_coordinates:
+                    return result
+            
+            result = {
+                "Passport Number": passport_number,
+                "coordinates": [passport_number_coordinates]
                     }
-                else:
-                    result = {
-                        "Passport Number": passport_number,
-                        "coordinates": [matching_passport_number_coords_top]
-                    }
-                return result
+            return result
         except Exception as e:
             self.logger.error(f"| Passport Number: {e}")
             return result
@@ -173,7 +163,7 @@ class PassportDocumentInfo:
             surname_coords = []
             surname_coordinates = []
             matching_line_index = None
-            matching_text_regex =  r"\b(?:surname|suname|ssurmame|weesenet)\b"
+            matching_text_regex =  r"\b(?:surname|suname|surmame|sumame|ssurmame|weesenet)\b"
 
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
@@ -182,12 +172,12 @@ class PassportDocumentInfo:
                     break
             if matching_line_index is None:
                 return result
-        
+            
             """get the surname coordinates"""
             for i in range(matching_line_index, len(self.coordinates)):
                 text = self.coordinates[i][4]
                 contains_no_numbers = lambda text: not bool(re.search(r'\d', text))
-                if text.isupper() and contains_no_numbers(text):
+                if text.isupper() and contains_no_numbers(text) and text != "SS":
                     surname_coords = [self.coordinates[i][0], self.coordinates[i][1],
                                          self.coordinates[i][2], self.coordinates[i][3]]
                     surname_text = text
@@ -217,7 +207,7 @@ class PassportDocumentInfo:
             given_name_cords = []
             matching_line_index = None
             given_name_coordinates = []
-            matching_text_regex =  r"\b(?:given|names|igiven)\b"
+            matching_text_regex =  r"\b(?:given|names|giver|igiven)\b"
         
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
@@ -255,7 +245,7 @@ class PassportDocumentInfo:
             "coordinates": []
             }
         try:
-           
+            
             father_name_text = ""
             matching_text_regex =  r"\b(?:father|legal|guardian)\b"
             father_name_coords = []
