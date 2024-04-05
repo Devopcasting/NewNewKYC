@@ -27,6 +27,7 @@ class PancardDocumentInfo:
     
     def _extract_text_coordinates(self):
         self.coordinates = TextCoordinates(self.document_path, lang_type=None).generate_text_coordinates()
+        print(self.coordinates)
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data = pytesseract.image_to_string(self.document_path, lang="eng", config=tesseract_config)
     
@@ -212,7 +213,7 @@ class PancardDocumentInfo:
                 """Collect: Pancard User and Father's names"""        
                 if pattern == 1:
                     """Username"""
-                    matching_text_keyword_username = ["name", "uiname","aname", "nin", "mame", "ssapcassh"]
+                    matching_text_keyword_username = ["ann","flame","name", "uiname","aname", "nin", "mame", "ssapcassh"]
                     username_p1 = PancardPattern1(self.coordinates, self.text_data, matching_text_keyword_username, "User").extract_user_father_name()
                     username_p1_status = False
                     if len(username_p1['coordinates']) != 0:
