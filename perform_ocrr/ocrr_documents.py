@@ -3,7 +3,7 @@ import json
 from config.mongodb_connection import EastablishMongoDBConnection
 from document_type_identification.identify_documents import IdentifyDocumentType
 from write_xml.rejected_doc_coordinates import GetRejectedDocumentCoordinates
-from write_xml.rejected_document import WriteRejectedDocumentXML
+from write_xml.rejected_document_bkp import WriteRejectedDocumentXML
 from write_xml.redacted_document import WriteRedactedDocumentXML
 from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
 from documents.cdsl.document_info import CDSLDocumentInfo
@@ -54,6 +54,7 @@ class PerformOCRROnDocuments:
                 
             """Remove collection document from workspace ocrr"""
             self._remove_collection_doc_from_workspace_ocrr(self.document_info['taskId'])
+
             """Send POST request to WebHOOK"""
             #self._webhook_post_request(self.document_info['taskId'])
         except Exception as e:
@@ -74,7 +75,7 @@ class PerformOCRROnDocuments:
             """Write Redacted Document XML file"""
             self.logger.info(f"| Document taskid {taskid} is REDACTED")
             redacted_doc_coordinates = result['data']
-            WriteRedactedDocumentXML(redactedPath, documentName, redacted_doc_coordinates ).writexml()
+            WriteRedactedDocumentXML(redactedPath, documentName, redacted_doc_coordinates ).write_xml()
             WriteRedactedDocumentXML(redactedPath, documentName, redacted_doc_coordinates ).write_redacted_data_xml()
             """Update upload db"""
             self._update_document_status(taskid, "REDACTED", result['message'])
