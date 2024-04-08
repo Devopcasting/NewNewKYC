@@ -1,4 +1,3 @@
-import sys
 import requests
 import json
 from config.mongodb_connection import EastablishMongoDBConnection
@@ -24,7 +23,6 @@ class PerformOCRROnDocuments:
             self.db_client = EastablishMongoDBConnection().establish_connection()
         except Exception as e:
             self.logger.error(f"| Connecting to MongoDB: {e}")
-            sys.exit(1)
 
     def start_ocrr(self):
         try:
@@ -52,17 +50,14 @@ class PerformOCRROnDocuments:
             if not documentIdentified:
                 self.logger.info(f"| Un-identified document of task id: {self.document_info['taskId']}")
                 self._unidentified_document_rejected(self.document_info['documentPath'], self.document_info['redactedPath'],
-                                                self.document_info['documentName'], self.document_info['taskId'])
+                                                self.document_info['documentName'], self.document_info['taskId'], "Unidentified document, Redacting 80%")
                 
             """Remove collection document from workspace ocrr"""
             self._remove_collection_doc_from_workspace_ocrr(self.document_info['taskId'])
-
             """Send POST request to WebHOOK"""
             #self._webhook_post_request(self.document_info['taskId'])
-
         except Exception as e:
             self.logger.error(f"| Performing OCRR: {e}")
-            sys.exit(1)
     
     def _perform_ocrr(self, status, result, document_path, redactedPath, documentName, taskid):
         if status == "REJECTED":
@@ -150,7 +145,7 @@ class PerformOCRROnDocuments:
         }}
         collection.update_one(filter_query, update)
 
-    def _unidentified_document_rejected(self, document_path, redactedPath, documentName, taskid):
+    def _unidentified_document_rejected(self, document_path, redactedPath, documentName, taskid, message: str):
         """
             - Redact 80% and get the coordinates
             - Write XML for Rejected document
@@ -159,7 +154,7 @@ class PerformOCRROnDocuments:
         WriteRejectedDocumentXML(redactedPath, documentName, rejected_doc_coordinates).writexml()
         
         """Update the document status"""
-        self._update_document_status(taskid, "REJECTED", "Unidentified Document, 80% Redaction done")
+        self._update_document_status(taskid, "REJECTED", f"{message}")
 
         """Remove document from workspace"""
         self._remove_document_from_workspace(document_path)
@@ -169,44 +164,36 @@ class PerformOCRROnDocuments:
         path.unlink()
     
     def _webhook_post_request(self, taskid):
-        try:
-            database_name = "upload"
-            collection_name = "fileDetails"
-            database = self.db_client[database_name]
-            collection = database[collection_name]
+        database_name = "upload"
+        collection_name = "fileDetails"
+        database = self.db_client[database_name]
+        collection = database[collection_name]
 
-            taskid_to_filter = {"taskId": taskid}
-            result = collection.find_one(taskid_to_filter)
+        taskid_to_filter = {"taskId": taskid}
+        result = collection.find_one(taskid_to_filter)
+    
+        client_id = result['clientId']
+        payload = {
+            "taskId": result['taskId'],
+            "status": result["status"],
+            "taskResult": result["taskResult"],
+            "clientId": result["clientId"],
+            "uploadDir": result["uploadDir"]
+        }
 
-            if not result:
-                self.logger.error(f"| No document found for task ID: {taskid}")
-                return
-            
-            client_id = result['clientId']
-            payload = {
-                "taskId": result['taskId'],
-                "status": result["status"],
-                "taskResult": result["taskResult"],
-                "clientId": result["clientId"],
-                "uploadDir": result["uploadDir"]
-            }
-
-            """Get Client Webhook URL from webhook DB"""
-            collection_name = "webhooks"
-            database = self.db_client[database_name]
-            collection = database[collection_name]
-            filter_query = {"clientId": client_id}
-            client_doc = collection.find_one(filter_query)
-            if client_doc:
-                WEBHOOK_URL = client_doc["url"]
-                HEADER = {'Content-Type': 'application/json'}
-                response = requests.post(WEBHOOK_URL+"/CVCore/processstatus", data=json.dumps(payload), headers=HEADER)
-                if response.status_code != 200:
-                    self.logger.error(f"| Connecting to WebHOOK: {response.status_code}")
-                    sys.exit(1)
+        """Get Client Webhook URL from webhook DB"""
+        collection_name = "webhooks"
+        database = self.db_client[database_name]
+        collection = database[collection_name]
+        filter_query = {"clientId": client_id}
+        client_doc = collection.find_one(filter_query)
+        if client_doc:
+            WEBHOOK_URL = client_doc["url"]
+            HEADER = {'Content-Type': 'application/json'}
+            response = requests.post(WEBHOOK_URL+"/CVCore/processstatus", data=json.dumps(payload), headers=HEADER)
+            if response.status_code != 200:
+                self.logger.error(f"| Connecting to WebHOOK: {response.status_code}")
             else:
-                self.logger.error(f"| Webhook URL not found for client ID: {client_id}")
-                sys.exit(1)
-        except Exception as e:
-            self.logger.error(f"| Webhook POST request: {e}")
-            sys.exit(1)
+                self.logger.info(f"| Webhook POST request successful: {client_id}")
+        else:
+            self.logger.error(f"| Webhook clientid not found")
