@@ -31,10 +31,10 @@ class AadhaarCardDocumentInfo:
         #print(self.coordinates_default)
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
-        tesseract_config = r'--oem 3 --psm 13'
+        tesseract_config = r'--oem 3 --psm 11'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
         #print(self.coordinates_regional)
-        #print(self.text_data_regional)
+        print(self.text_data_regional)
     
     def _extract_dob(self):
         result = {
@@ -221,12 +221,12 @@ class AadhaarCardDocumentInfo:
 
             """split the text into lines"""
             lines = [i for i in self.text_data_regional.splitlines() if len(i) != 0]
-
+    
             """get the matching text index"""
             gender_pattern = r"male|female"
             for i, item in enumerate(lines):
                 if re.search(gender_pattern, item, flags=re.IGNORECASE):
-                    name_text = lines[i - 2]
+                    name_text = lines[i - 4]
                     break
             if not name_text:
                 return result

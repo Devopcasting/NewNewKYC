@@ -159,7 +159,7 @@ class DrivingLicenseDocumentInfo:
             name_coords = []
             matching_text = r"\b(?:name)\b"
             matching_text_index = None
-
+            print(self.coordinates)
             """get matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if re.search(matching_text, text.lower(), flags=re.IGNORECASE):
@@ -172,7 +172,7 @@ class DrivingLicenseDocumentInfo:
             """get the coordinates"""
             for i in range(matching_text_index + 1, len(self.coordinates)):
                 text = self.coordinates[i][4]
-                if text.lower() in ['s/dmw', 'dmw', 's/']:
+                if text.lower() in ['s/dmw', 'dmw', 's/', 'union', 'of', 'india']:
                     break
                 name_coords.append([x1, y1, x2, y2])
                 name_text += " "+text
@@ -198,21 +198,21 @@ class DrivingLicenseDocumentInfo:
         try:
             if self.DOCUMENT_REDACTION_LEVEL == 1:
 
-                """Collect DL Number"""
-                dl_number = self._extract_dl_number()
-                dl_card_info_list.append(dl_number)
+                # """Collect DL Number"""
+                # dl_number = self._extract_dl_number()
+                # dl_card_info_list.append(dl_number)
 
-                """Collect DL Dates"""
-                dl_dates = self._extract_dates()
-                dl_card_info_list.append(dl_dates)
+                # """Collect DL Dates"""
+                # dl_dates = self._extract_dates()
+                # dl_card_info_list.append(dl_dates)
 
-                """Collect DL Pincodes"""
-                pincode = self._extract_pincode()
-                dl_card_info_list.append(pincode)
+                # """Collect DL Pincodes"""
+                # pincode = self._extract_pincode()
+                # dl_card_info_list.append(pincode)
 
-                """Collect DL Places"""
-                places = self._extract_places()
-                dl_card_info_list.append(places)
+                # """Collect DL Places"""
+                # places = self._extract_places()
+                # dl_card_info_list.append(places)
 
                 """Collect DL Name"""
                 dl_name = self._extract_name()

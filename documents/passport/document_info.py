@@ -163,7 +163,7 @@ class PassportDocumentInfo:
             surname_coords = []
             surname_coordinates = []
             matching_line_index = None
-            matching_text_regex =  r"\b(?:surname|suname|surmame|sumame|ssurmame|weesenet)\b"
+            matching_text_regex =  r"\b(?:surname|suname|surmame|sumame|ssurmame|weesenet|canam)\b"
 
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
@@ -207,20 +207,21 @@ class PassportDocumentInfo:
             given_name_cords = []
             matching_line_index = None
             given_name_coordinates = []
-            matching_text_regex =  r"\b(?:given|names|giver|igiven)\b"
+            matching_text_regex =  r"\b(?:given|names|giver|igiven|ghee)\b"
         
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if re.search(matching_text_regex, text.lower(), flags=re.IGNORECASE):
                     matching_line_index = i
                     break
+
             if matching_line_index is None:
                 return result
         
             """get the coordinates"""
             for i in range(matching_line_index, len(self.coordinates)):
                 text = self.coordinates[i][4]
-                if text.lower() in ["fin", "wanfafa","dore","fier","sex","pl","ie","i3ex","wafers"]:
+                if text.lower() in ["fin","sax","indian","wen","wanfafa","dore","fier","sex","pl","ie","i3ex","wafers","pepo","or","ent","seal","fer"]:
                     break
                 if text.isupper():
                     given_name_cords.append([x1, y1, x2, y2])
