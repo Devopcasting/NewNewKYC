@@ -1,7 +1,6 @@
 from config.mongodb_connection import EastablishMongoDBConnection
 from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
 from time import sleep
-import sys
 
 class FilterInProgressStatusDocuments:
     def __init__(self, doc_upload_path: str, in_progress_status_q: object) -> None:
@@ -17,7 +16,6 @@ class FilterInProgressStatusDocuments:
             self.collection_ocrr = db_client["ocrrworkspace"]["ocrr"]
         except Exception as e:
             self.logger.error(f"| Establishing MongoDB connection: {e}")
-            sys.exit(1)
 
     def _get_document_path(self, document):
         document_path_list = [part for part in document['uploadDir'].split('/') if part]
@@ -35,7 +33,6 @@ class FilterInProgressStatusDocuments:
                 sleep(5)
         except Exception as e:
             self.logger.error(f"| While querying IN_PROGRESS status: {e}")
-            sys.exit(1)
     
     def insert_in_progress_status_doc_info(self, document):
         try:
@@ -54,19 +51,16 @@ class FilterInProgressStatusDocuments:
                 self.update_in_progress_status(taskid)
         except Exception as e:
             self.logger.error(f"| Inserting IN_PROGRESS status document info.: {e}")
-            sys.exit(1)
     
     def check_existing_taskid(self, taskid: str) -> bool:
         try:
             return not self.collection_ocrr.find_one({"taskId": taskid})
         except Exception as e:
             self.logger.error(f"| Checking existing task ID: {e}")
-            sys.exit(1)
     
     def update_in_progress_status(self, taskid: str):
         try:
             self.collection_filedetails.update_one({"taskId": taskid}, {"$set": {"status": "IN_QUEUE"}})
         except Exception as  e:
             self.logger.error(f"| Updating IN_PROGRESS status: {e}")
-            sys.exit(1)
         
