@@ -9,7 +9,7 @@ indian_states_cities = [
     "mahidpur","seoni-malwa","rehli","manawar","rahatgarh","panagar","wara seoni","tarana","sausar","rajgarh","niwari","mauganj","manasa","nainpur","prithvipur","sohagpur","nowrozabad (khodargama)","shamgarh","maharajpur","multai","pali","pachore","rau","mhowgaon","vijaypur","narsinghgarh",
     "jharkhand","dhanbad","ranchi","jamshedpur","bokaro steel city","deoghar","phusro","adityapur","hazaribag","giridih","ramgarh","jhumri tilaiya","saunda","sahibganj","medininagar (daltonganj)","chaibasa","chatra","gumia","dumka","madhupur","chirkunda","pakaur","simdega","musabani",
     "mihijam","patratu","lohardaga","tenu dam-cum-kathhara","mizoram", "aizawl","lunglei","saiha","nagaland","Dimapur","kohima","zunheboto","tuensang","wokha","mokokchung","himachal pradesh", "shimla","mandi","solan","nahan","sundarnagar","palampur","kullu","tripura", "agartala","udaipur","dharmanagar",
-    "pratapgarh","kailasahar","belonia","khowai","andhra pradesh","visakhapatnam","vijayawada","guntur","nellore","kurnool","rajahmundry","kakinada","tirupati","anantapur","kadapa","vizianagaram","eluru","ongole","nandyal","machilipatnam","adoni","tenali","chittoor","hindupur","proddatur","bhimavaram","madanapalle","guntakal","dharmavaram","gudivada","srikakulam","narasaraopet","rajampet","tadpatri","tadepalligudem","chilakaluripet","yemmiganur","kadiri","chirala","anakapalle","kavali","palacole","sullurpeta","tanuku","rayachoti","srikalahasti","bapatla","naidupet","nagari",
+    "pratapgarh","kailasahar","belonia","khowai","andhra pradesh","Andhra","Pradesh","visakhapatnam","vijayawada","guntur","nellore","kurnool","rajahmundry","kakinada","tirupati","anantapur","kadapa","vizianagaram","eluru","ongole","nandyal","machilipatnam","adoni","tenali","chittoor","hindupur","proddatur","bhimavaram","madanapalle","guntakal","dharmavaram","gudivada","srikakulam","narasaraopet","rajampet","tadpatri","tadepalligudem","chilakaluripet","yemmiganur","kadiri","chirala","anakapalle","kavali","palacole","sullurpeta","tanuku","rayachoti","srikalahasti","bapatla","naidupet","nagari",
     "gudur","vinukonda","narasapuram","nuzvid","markapur","ponnur","kandukur","bobbili","rayadurg","samalkot","jaggaiahpet","tuni","amalapuram","bheemunipatnam","venkatagiri","sattenapalle","pithapuram","palasa kasibugga","parvathipuram","macherla","gooty","salur","mandapeta","jammalamadugu","peddapuram","punganur",
     "nidadavole","repalle","ramachandrapuram","kovvur","tiruvuru","uravakonda","narsipatnam","yerraguntla","pedana","puttur","renigunta","rajam","punjab","ludhiana","patiala","amritsar","jalandhar","bathinda","pathankot","hoshiarpur","batala","moga","malerkotla","khanna","mohali","barnala","firozpur","phagwara","kapurthala","zirakpur","kot kapura","faridkot","muktsar","rajpura","sangrur","fazilka","gurdaspur","kharar","gobindgarh","mansa","malout","nabha","tarn taran","jagraon","sunam","dhuri","firozpur cantt.","sirhind fatehgarh sahib","rupnagar","jalandhar cantt.","samana","nawanshahr","rampura phul","nangal","nakodar","zira","patti","raikot","longowal","urmar tanda","morinda","phillaur","pattran","qadian","sujanpur","mukerian","talwara",
     "chandigarh","rajasthan","jaipur","jodhpur","bikaner","udaipur","ajmer","bhilwara","alwar","bharatpur","pali","barmer","sikar","tonk","sadulpur","sawai madhopur","nagaur","makrana","sujangarh","sardarshahar","ladnu","ratangarh","nokha","nimbahera","suratgarh","rajsamand","lachhmangarh",
@@ -18,10 +18,10 @@ indian_states_cities = [
     "takhatgarh","assam","Guwahati","silchar","dibrugarh","nagaon","tinsukia","jorhat","bongaigaon city","dhubri","diphu","north lakhimpur","tezpur","karimganj","sibsagar","goalpara","barpeta","lanka","lumding","mankachar","nalbari","rangia","margherita","mangaldoi","silapathar",
     "mariani","marigaon","odisha", "bhubaneswar","cuttack","raurkela","brahmapur","sambalpur","puri","baleshwar town","baripada town","bhadrak","balangir","jharsuguda","bargarh","paradip","bhawanipatna","dhenkanal","barbil","kendujhar","sunabeda","rayagada","jatani","byasanagar",
     "kendrapara","rajagangapur","parlakhemundi","talcher","sundargarh","phulabani","pattamundai","titlagarh","nabarangapur","soro","malkangiri","rairangpur","tarbha","chhattisgarh","raipur","bhilai nagar","korba","bilaspur","durg","rajnandgaon","jagdalpur","raigarh","ambikapur",
-    "mahasamund","dhamtari","chirmiri","bhatapara","dalli-rajhara","naila janjgir","tilda newra","mungeli","manendragarh","sakti","karnataka","bengaluru","hubli-dharwad","belagavi","mangaluru","davanagere","ballari","mysore","tumkur","shivamogga","raayachuru","robertson pet","kolar",
+    "mahasamund","dhamtari","chirmiri","bhatapara","dalli-rajhara","naila janjgir","tilda newra","mungeli","manendragarh","sakti","karnataka","Kamataka","Kamatska","Bangalore","bengaluru","hubli-dharwad","belagavi","mangaluru","davanagere","ballari","mysore","tumkur","shivamogga","raayachuru","robertson pet","kolar",
     "mandya","udupi","chikkamagaluru","karwar","ranebennuru","ranibennur","ramanagaram","gokak","yadgir","rabkavi banhatti","shahabad","sirsi","sindhnur","tiptur","arsikere","nanjangud","sagara","sira","puttur","athni","mulbagal","surapura","siruguppa","mudhol","sidlaghatta",
     "shahpur","saundatti-yellamma","wadi","manvi","nelamangala","lakshmeshwar","ramdurg","nargund","tarikere","malavalli","savanur","lingsugur","vijayapura","sankeshwara","madikeri","talikota","sedam","shikaripur","mahalingapura","mudalagi","muddebihal","pavagada","malur","sindhagi",
-    "sanduru","afzalpur","maddur","madhugiri","tekkalakote","terdal","mudabidri","magadi","navalgund","shiggaon","shrirangapattana","sindagi","sakaleshapura","srinivaspur","ron","mundargi","sadalagi","piriyapatna","adyar","Maharashtra","Mumbai","Mumbal","Pune","Nagpur","Thane","Nashik","Kalyan-Dombivali",
+    "sanduru","afzalpur","maddur","madhugiri","tekkalakote","terdal","mudabidri","magadi","navalgund","shiggaon","shrirangapattana","sindagi","sakaleshapura","srinivaspur","ron","mundargi","sadalagi","piriyapatna","adyar","Maharashtra","Maharashira","Mumbel","Mumba","Saniacruz","Mumbai","Mumbal","Pune","Yerwada","Puny","Nagpur","Thane","Nashik","Kalyan-Dombivali",
     "Vasai-Virar","Solapur","Mira-Bhayandar","Bhiwandi","Amravati","Nanded-Waghala","Sangli","Malegaon","Akola","Latur","Dhule","Ahmednagar","Ichalkaranji","Parbhani","Panvel","Yavatmal","Achalpur","Osmanabad","Nandurbar","Satara","Wardha","Udgir","Aurangabad","Amalner","Akot","Pandharpur","Shrirampur",
     "Parli","Washim","Ambejogai","Manmad","Ratnagiri","Uran Islampur","Pusad","Sangamner","Shirpur-Warwade","Malkapur","Wani","Lonavla","Talegaon Dabhade","Anjangaon","Umred","Palghar","Shegaon","Ozar","Phaltan","Yevla","Shahade","Vita","Umarkhed","Warora","Pachora","Tumsar","Manjlegaon",
     "Sillod","Arvi","Nandura","Vaijapur","Wadgaon Road","Sailu","Murtijapur","Tasgaon","Mehkar","Yawal","Pulgaon","Nilanga","Wai","Umarga","Paithan","Rahuri","Nawapur","Tuljapur","Morshi","Purna","Satana","Pathri","Sinnar","Uchgaon","Uran","Pen","Karjat","Manwath","Partur",
@@ -144,6 +144,8 @@ indian_states_cities = [
     "Asarganj",
     "Gujarat",
     "Ahmedabad",
+    "Ahmadabad",
+    "Anmadabad",
     "Surat",
     "Vadodara",
     "Rajkot",
@@ -315,6 +317,7 @@ indian_states_cities = [
     "Monoharpur",
     "Srirampore",
     "Adra",
-    "DUBAI"
+    "DUBAI",
+    "Muscat"
     ]
     
