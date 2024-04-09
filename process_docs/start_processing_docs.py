@@ -1,10 +1,10 @@
 import os
-import sys
 import shutil
 import cv2
 from time import sleep
 from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
 from perform_ocrr.ocrr_documents import PerformOCRROnDocuments
+from config.mongodb_connection import EastablishMongoDBConnection
 
 class ProcessDocuments:
     def __init__(self, in_progress_status_doc_q: object, doc_upload_path: str, workspace_path: str) -> None:
@@ -12,13 +12,19 @@ class ProcessDocuments:
         self.doc_upload_path = doc_upload_path
         self.workspace_path = workspace_path
         self.logger = OCRREngineLogging().configure_logger()
+        self.db_client = EastablishMongoDBConnection().establish_connection()
     
     def process_docs(self):
         while True:
             try:
                 document_info = self.in_progress_status_doc_q.get()
                 if document_info:
-                    self._process_document(document_info)
+                    """Check if the file path exists"""
+                    is_filpath_exists = self._check_file_path_exits(document_info['path'])
+                    if is_filpath_exists:
+                        self._process_document(document_info)
+                    else:
+                        self._update_status_file_not_available(document_info['taskId'], document_info['path'])
                 sleep(5)
             except Exception as e:
                 self.logger.error(f"| Processing document: {str(e)}")
@@ -84,3 +90,23 @@ class ProcessDocuments:
     def _get_prefix_name(self, document_path: str) -> str:
         room_name, room_id = document_path.split("\\")[-3:-1]
         return f"{room_name}+{room_id}+"
+    
+    def _check_file_path_exits(self, filepath: str) -> bool:
+        if not os.path.exists(filepath):
+            return False
+        return True
+    
+    def _update_status_file_not_available(self, taskid: str, filepath: str):
+        database_name = "upload"
+        collection_name = "fileDetails"
+        database = self.db_client[database_name]
+        collection = database[collection_name]
+        query = {"taskId": taskid}
+        update = {
+            "$set": {
+                "status": "REJECTED",
+                "taskResult": "Document file not found"
+                }
+            }
+        collection.update_one(query, update)
+        self.logger.info(f"| Document file not found: {filepath}")
