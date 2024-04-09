@@ -32,10 +32,7 @@ class EAadhaarCardDocumentInfo:
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng")
-        #print(self.coordinates_default)
-        print(self.coordinates)
-        #print(self.coordinates_regional)
-    
+        
     def _extract_dob(self) -> dict:
         result = {
             "E-Aadhaar DOB": "",
@@ -87,6 +84,7 @@ class EAadhaarCardDocumentInfo:
         try:
             # Split the date string into day, month, and year
             day, month, year = map(int, date_str.split(split_pattern))
+            
             # Check if the date is within valid ranges
             if not (1 <= day <= 31 and 1 <= month <= 12 and 1000 <= year <= 2999):
                 return False
@@ -111,7 +109,7 @@ class EAadhaarCardDocumentInfo:
 
             """Get the matching index number of gender"""
             for i ,(x1,y1,x2,y2,text) in enumerate(self.coordinates_default):
-                if text.lower() in ["male", "female", "femalp"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala"]:
                      matching_index = i
                      gender_text = text
                      break

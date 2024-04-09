@@ -28,14 +28,11 @@ class AadhaarCardDocumentInfo:
     
     def _extract_text_coordinates(self):
         self.coordinates_default = TextCoordinates(self.document_path, lang_type="default").generate_text_coordinates()
-        #print(self.coordinates_default)
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
-        #print(self.coordinates_regional)
-        print(self.text_data_regional)
-    
+        
     def _extract_dob(self):
         result = {
             "Aadhaar DOB": "",
@@ -44,25 +41,27 @@ class AadhaarCardDocumentInfo:
         try:
             dob_text = ""
             dob_coordinates = []
+            dob_coords = []
         
             """Data patterns: DD/MM/YYY, DD-MM-YYY"""
-            date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}|\d{4}'
+            date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}'
 
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 match = re.search(date_pattern, text)
                 if match:
-                    dob_coordinates = [x1, y1, x2, y2]
-                    dob_text = text
-                    break
-
-            if not dob_coordinates:
+                    dob_coords.append([x1, y1, x2, y2])
+                    dob_text += " "+ text
+            if not dob_coords:
                 return result
         
             """Get first 6 chars"""
-            width = dob_coordinates[2] - dob_coordinates[0]
+            for i in dob_coords:
+                width = i[2] - i[0]
+                dob_coordinates.append([i[0], i[1], i[0] + int(0.54 * width), i[3]])
+
             result = {
                 "Aadhaar DOB": dob_text,
-                "coordinates": [[dob_coordinates[0], dob_coordinates[1], dob_coordinates[0] + int(0.54 * width), dob_coordinates[3]]]
+                "coordinates": dob_coordinates
             }
             return result
         except Exception as e:
@@ -78,7 +77,7 @@ class AadhaarCardDocumentInfo:
             gender_text = ""
             gender_coordinates = []
 
-            gender_pattern = r"male|female"
+            gender_pattern = r"male|female|femala|mala"
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 if re.search(gender_pattern, text, flags=re.IGNORECASE):
                     gender_coordinates.append([x1, y1, x2, y2])
@@ -323,6 +322,42 @@ class AadhaarCardDocumentInfo:
         result = [coords[0], coords[1], coords[0] + int(0.30 * width), coords[3]]
         return result
 
+    def _extract_mobile_number(self):
+        result = {
+            "Aadhaar Mobile Number": "",
+            "coordinates": []
+            }
+        try:
+            mobile_number = ""
+            mobile_coordinates = []
+
+            """get the coordinates"""
+            for i,(x1, y1, x2, y2,text) in enumerate(self.coordinates_default):
+                if len(text) == 10 and text.isdigit():
+                    mobile_coordinates = [x1, y1, x2, y2]
+                    mobile_number = text
+                    break
+            if not mobile_coordinates:
+                """Other approach"""
+                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
+                    if re.match(r'^\d{10}\.?$', text):
+                        mobile_coordinates = [x1, y1, x2, y2]
+                        mobile_number = text
+                        break
+                if not mobile_coordinates:
+                    return result
+        
+            """get first 6 chars"""
+            width = mobile_coordinates[2] - mobile_coordinates[0]
+            result = {
+                "Aadhaar Mobile Number" : mobile_number,
+                "coordinates" : [[mobile_coordinates[0], mobile_coordinates[1], mobile_coordinates[0] + int(0.54 * width), mobile_coordinates[3]]]
+            }
+            return result
+        except Exception as e:
+            self.logger.error(f"| Aadhaar Mobile Number: {e}")
+            return result
+    
     def _extract_qrcode(self):
         result = {
             "Aadhaar QR Code": "",
@@ -389,6 +424,10 @@ class AadhaarCardDocumentInfo:
                 pincode = self._extract_pin_code()
                 aadhaarcard_doc_info_list.append(pincode)
 
+                """Collect Mobile number"""
+                mobile_number = self._extract_mobile_number()
+                aadhaarcard_doc_info_list.append(mobile_number)
+
                 """Collect QR-Codes"""
                 qrcode = self._extract_qrcode()
                 aadhaarcard_doc_info_list.append(qrcode)
@@ -440,15 +479,31 @@ class AadhaarCardDocumentInfo:
 
                 """Collect Place name"""
                 place_name = self._extract_palces()
-                aadhaarcard_doc_info_list.append(place_name)
+                if len(place_name['coordinates']) == 0:
+                    self.logger.error("| Aadhaar Card Place name not found")
+                else:
+                    aadhaarcard_doc_info_list.append(place_name)
 
                 """Collect Pincode"""
                 pincode = self._extract_pin_code()
-                aadhaarcard_doc_info_list.append(pincode)
+                if len(pincode['coordinates']) == 0:
+                    self.logger.error("| Aadhaar Card Pincode not found")
+                else:
+                    aadhaarcard_doc_info_list.append(pincode)
+
+                """Collect Mobile number"""
+                mobile_number = self._extract_mobile_number()
+                if len(mobile_number['coordinates']) == 0:
+                    self.logger.error("| Aadhaar Card Phone number not found")
+                else:
+                    aadhaarcard_doc_info_list.append(mobile_number)
 
                 """Collect QR-Codes"""
                 qrcode = self._extract_qrcode()
-                aadhaarcard_doc_info_list.append(qrcode)
+                if len(qrcode['coordinates']) == 0:
+                    self.logger.error("| Aadhaar Card QR-Code not found")
+                else:
+                    aadhaarcard_doc_info_list.append(qrcode)
 
                 self.logger.info(f"| Successfully Redacted Aadhaar Document")
                 return {"message": "Successfully Redacted Aadhaar Document", "status": "REDACTED", "data": aadhaarcard_doc_info_list}

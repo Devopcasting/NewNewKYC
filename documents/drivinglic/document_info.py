@@ -4,6 +4,8 @@ import pytesseract
 from helper.extract_text_coordinates import TextCoordinates
 from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
 from config.indian_places import indian_states_cities
+from qreader import QReader
+import cv2
 
 class DrivingLicenseDocumentInfo:
     def __init__(self, document_path: str) -> None:
@@ -12,6 +14,7 @@ class DrivingLicenseDocumentInfo:
         self._setup_logging()
         self._extract_text_coordinates()
         self.states = indian_states_cities
+        self.qreader = QReader()
 
     def _load_configuration(self):
         config = configparser.ConfigParser(allow_no_value=True)
@@ -159,7 +162,6 @@ class DrivingLicenseDocumentInfo:
             name_coords = []
             matching_text = r"\b(?:name)\b"
             matching_text_index = None
-            print(self.coordinates)
             """get matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if re.search(matching_text, text.lower(), flags=re.IGNORECASE):
@@ -192,31 +194,114 @@ class DrivingLicenseDocumentInfo:
             self.logger.error(f"| Driving License Name: {error}")
             return result
 
+    def _extract_sdw_name(self):
+        result = {
+            "Driving License SDW Name": "",
+            "coordinates": []
+        }
+        try:
+            matching_text = r"\b(?:son|daughter)\b"
+            sdw_name = ""
+            sdw_name_coordinates = []
+            matching_text_index = None
+
+            """get matching text index"""
+            for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
+                if re.search(matching_text, text.lower(), flags=re.IGNORECASE):
+                    matching_text_index = i
+                    break
+            if matching_text_index is None:
+                return result
+            
+            """get the coordinates"""
+            for i in range(matching_text_index + 1, len(self.coordinates)):
+                text = self.coordinates[i][4]
+                if text.isupper() and text.isalpha():
+                    sdw_name_coordinates.append([x1, y1, x2, y2])
+                    sdw_name += " "+text
+                    break
+            if not sdw_name_coordinates:
+                return result
+            
+            if len(sdw_name_coordinates) > 1:
+                result = {
+                    "Driving License SDW Name": sdw_name,
+                    "coordinates": [[sdw_name_coordinates[0][0], sdw_name_coordinates[0][1], sdw_name_coordinates[-1][2], sdw_name_coordinates[-1][3]]]
+                }
+            else:
+                result = {
+                    "Driving License SDW Name": sdw_name,
+                    "coordinates": [[sdw_name_coordinates[0][0], sdw_name_coordinates[0][1], sdw_name_coordinates[0][2], sdw_name_coordinates[0][3]]]
+                }
+            return result
+        except Exception as e:
+            self.logger.error(f"| Driving License SDW Name: {e} ")
+            return result
+
+    def _extract_qrcode(self):
+        result = {
+            "Driving License QR Code": "",
+            "coordinates": []
+            }
+        try:
+            qrcode_coordinates = []
+            # Load the image
+            image = cv2.imread(self.document_path)
+
+            # Detect and decode QR codes
+            found_qrs = self.qreader.detect(image)
+
+            if not found_qrs:
+               return result
+            
+            """get 50% of QR Code"""
+            for i in found_qrs:
+                x1, y1, x2, y2 = i['bbox_xyxy']
+                qrcode_coordinates.append([int(round(x1)), int(round(y1)), int(round(x2)), (int(round(y1)) + int(round(y2))) // 2])
+                #qrcode_coordinates.append([int(round(x1)), int(round(y1)), int(round(x2)), int(round(y2))])
+        
+            result = {
+                "Driving License QR Code": f"Found {len(qrcode_coordinates)} QR Codes",
+                "coordinates": qrcode_coordinates
+            }
+            return result
+        except Exception as e:
+            self.logger.error(f"Driving License QR Code: {e}")
+            return result
+
     def collect_dl_doc_info(self):
         dl_card_info_list = []
 
         try:
             if self.DOCUMENT_REDACTION_LEVEL == 1:
 
-                # """Collect DL Number"""
-                # dl_number = self._extract_dl_number()
-                # dl_card_info_list.append(dl_number)
+                """Collect DL Number"""
+                dl_number = self._extract_dl_number()
+                dl_card_info_list.append(dl_number)
 
-                # """Collect DL Dates"""
-                # dl_dates = self._extract_dates()
-                # dl_card_info_list.append(dl_dates)
+                """Collect DL Dates"""
+                dl_dates = self._extract_dates()
+                dl_card_info_list.append(dl_dates)
 
-                # """Collect DL Pincodes"""
-                # pincode = self._extract_pincode()
-                # dl_card_info_list.append(pincode)
+                """Collect DL Pincodes"""
+                pincode = self._extract_pincode()
+                dl_card_info_list.append(pincode)
 
-                # """Collect DL Places"""
-                # places = self._extract_places()
-                # dl_card_info_list.append(places)
+                """Collect DL Places"""
+                places = self._extract_places()
+                dl_card_info_list.append(places)
 
                 """Collect DL Name"""
                 dl_name = self._extract_name()
                 dl_card_info_list.append(dl_name)
+
+                """Collect SDW Name"""
+                dl_sdw_name = self._extract_sdw_name()
+                dl_card_info_list.append(dl_sdw_name)
+
+                """Collect QR Code"""
+                dl_qrcode = self._extract_qrcode()
+                dl_card_info_list.append(dl_qrcode)
 
                 """Check if all the dictionaries in the list are empty"""
                 all_keys_and_coordinates_empty =  all(all(not v for v in d.values()) for d in dl_card_info_list)
@@ -254,8 +339,22 @@ class DrivingLicenseDocumentInfo:
                 dl_name = self._extract_name()
                 if len(dl_name['coordinates']) == 0:
                     self.logger.error("| Driving license name not found")
-                    return {"message": "Unable to extract name from driving license number", "status": "REJECTED"}
+                    return {"message": "Unable to extract name from driving license", "status": "REJECTED"}
                 dl_card_info_list.append(dl_name)
+
+                """Collect SDW Name"""
+                dl_sdw_name = self._extract_sdw_name()
+                if len(dl_sdw_name['coordinates']) == 0:
+                    self.logger.error("| Driving license SDW name not found")
+                    return {"message": "Unable to extract SDW name from driving license", "status": "REJECTED"}
+                dl_card_info_list.append(dl_sdw_name)
+
+                """Collect QR Code"""
+                dl_qrcode = self._extract_qrcode()
+                if len(dl_qrcode['coordinates']) == 0:
+                    self.logger.error("| Driving license QR Code not found")
+                else:
+                    dl_card_info_list.append(dl_qrcode)
 
                 self.logger.info(f"| Successfully Redacted Driving License Document")
                 return {"message": "Successfully Redacted Driving License Document", "status": "REDACTED", "data": dl_card_info_list}
