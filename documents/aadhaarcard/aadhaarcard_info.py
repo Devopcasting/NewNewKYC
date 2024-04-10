@@ -176,9 +176,10 @@ class AadhaarCardDocumentInfo:
 
             """get the matching text index"""
             for i, item in enumerate(lines):
-                if dob_pattern.search(item) or date_pattern.search(item) or year_pattern.search(item):
+                if "dOBOS" not in item and (dob_pattern.search(item) or date_pattern.search(item) or year_pattern.search(item)):
                     name_text = lines[i - 1]
                     break
+
             if not name_text:
                 return result
         

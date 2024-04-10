@@ -27,6 +27,7 @@ class PassportDocumentInfo:
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data = pytesseract.image_to_string(self.document_path, lang="eng", config=tesseract_config)
         
+        
     def _extract_passport_number(self):
         result = {
             "Passport Number": "",
@@ -161,7 +162,7 @@ class PassportDocumentInfo:
             surname_coords = []
             surname_coordinates = []
             matching_line_index = None
-            matching_text_regex =  r"\b(?:surname|suname|surmame|sumame|ssurmame|weesenet|canam)\b"
+            matching_text_regex =  r"\b(?:surname|suname|surmame|sumame|ssurmame|weesenet|canam|sumsme)\b"
 
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
@@ -219,9 +220,9 @@ class PassportDocumentInfo:
             """get the coordinates"""
             for i in range(matching_line_index, len(self.coordinates)):
                 text = self.coordinates[i][4]
-                if text.lower() in ["fin","sax","indian","wen","wanfafa","dore","fier","sex","pl","ie","i3ex","wafers","pepo","or","ent","seal","fer"]:
+                if text.lower() in ["eo","ea","ee","fort","wef","ly","fin","/sex","sax","indian","wen","wanfafa","dore","fier","sex","pl","ie","i3ex","wafers","pepo","or","ent","seal","fer"]:
                     break
-                if text.isupper():
+                if text.isupper() or text[0].isupper() and text.lower() not in ["given","names","giver","igiven","ghee"]:
                     given_name_cords.append([x1, y1, x2, y2])
                     given_name_text += " "+text
         
@@ -262,9 +263,9 @@ class PassportDocumentInfo:
             """get the coordinates"""
             for i in range(matching_line_index, len(self.coordinates)):
                 text = self.coordinates[i][4]
-                if text.lower() in ["aren", "ast", "sa", "/name", "of", "mother", "ware", "an", "wim"]:
+                if text.lower() in ["aren", "ast", "sa", "/name", "of", "mother", "ware", "an", "wim", "rope"]:
                         break
-                if text.isupper():
+                if text.isupper() and text not in self.states:
                     father_name_coords.append([x1, y1, x2, y2])
                     father_name_text += " "+text
                     

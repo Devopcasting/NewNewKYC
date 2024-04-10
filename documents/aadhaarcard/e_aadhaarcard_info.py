@@ -106,23 +106,33 @@ class EAadhaarCardDocumentInfo:
             gender_text = ""
             gender_coordinates = []
             matching_index = None
+            coordinates = self.coordinates_default
 
             """Get the matching index number of gender"""
-            for i ,(x1,y1,x2,y2,text) in enumerate(self.coordinates_default):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala"]:
+            for i ,(x1,y1,x2,y2,text) in enumerate(coordinates):
+                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale"]:
                      matching_index = i
                      gender_text = text
                      break
             if matching_index is None:
-                return result
+                coordinates = self.coordinates
+                """Try with self.coordinates"""
+                for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
+                    if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale"]:
+                        matching_index = i
+                        gender_text = text
+                        break
+                if matching_index is None:
+                    return result
+                
             
             """Revese loop from gender index until DOB"""
             for i in range(matching_index, -1, -1):
-                 if re.match(r'^\d{2}/\d{2}/\d{4}$', self.coordinates_default[i][4]) or re.match(r'^\d{4}$', self.coordinates_default[i][4]):
+                 if re.match(r'^\d{2}/\d{2}/\d{4}$', coordinates[i][4]) or re.match(r'^\d{4}$', coordinates[i][4]):
                      break
                  else:
-                     gender_coordinates.append([self.coordinates_default[i][0], self.coordinates_default[i][1], 
-                                           self.coordinates_default[i][2], self.coordinates_default[i][3]])
+                     gender_coordinates.append([coordinates[i][0], coordinates[i][1], 
+                                           coordinates[i][2], coordinates[i][3]])
             
             result = {
                 "E-Aadhaar Gender": gender_text,
@@ -147,13 +157,13 @@ class EAadhaarCardDocumentInfo:
 
             """Get the gender index"""
             for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate","#femste","fomale"]:
                     matching_index = i
                     break
             if matching_index is None:
                 coordinates = self.coordinates_default
                 for i,(x1, y1, x2, y2, text) in enumerate(coordinates):
-                    if text.lower() in ["male", "female", "femalp"]:
+                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale"]:
                         matching_index = i
                         break
                 if matching_index is None:
@@ -185,16 +195,17 @@ class EAadhaarCardDocumentInfo:
         
     def _extract_name_in_english(self):
         result = {
-            "E-Aadhaar Name": "",
+            "E-Aadhaar Name in English": "",
             "coordinates": []
         }
         try:
             name_coordinates = []
             matching_text_index = None
+            matching_text = []
 
             """Clean the data text"""
             clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
-
+        
             """Get the above matching text"""
             matching_text = []
             match_1_keywords = ["dob", "birth", "bith", "year", "binh"]
@@ -202,6 +213,7 @@ class EAadhaarCardDocumentInfo:
                 if any(keyword in text.lower() for keyword in match_1_keywords):
                      matching_text = clean_text[i - 1].split()
                      break
+                
             if not matching_text:
                 """Check if name is avilable after 'To' """
                 match_2_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta"]
@@ -209,6 +221,7 @@ class EAadhaarCardDocumentInfo:
                     if any(keyword in text.lower() for keyword in match_2_keywords):
                         matching_text_index = i
                         break
+
                 if matching_text_index is None:
                     return result
                 
@@ -218,8 +231,9 @@ class EAadhaarCardDocumentInfo:
                      if all_lower:
                          continue
                      check_first_chars_capital = lambda s: all(word[0].isupper() for word in re.findall(r'\b\w+', s))
-                     if check_first_chars_capital:
+                     if check_first_chars_capital and clean_text[i].lower() not in match_2_keywords:
                          matching_text = clean_text[i].split()
+                         print(matching_text)
                          break
                 if not matching_text:
                     return result
@@ -233,17 +247,17 @@ class EAadhaarCardDocumentInfo:
                     name_coordinates.append([x1,y1,x2,y2])
             
             result = {
-                "E-Aadhaar Name": " ".join(matching_text),
+                "E-Aadhaar Name in English": " ".join(matching_text),
                 "coordinates": name_coordinates
             }
             return result
         except Exception as e:
-            self.logger.error(f"| E-Aadhaar Name: {e}")
+            self.logger.error(f"| E-Aadhaar Name in English: {e}")
             return result
         
     def _extact_name_in_native(self):
         result = {
-            "E-Aadhaar Name": "",
+            "E-Aadhaar Name in Native": "",
             "coordinates": []
         }
         try:
@@ -270,12 +284,12 @@ class EAadhaarCardDocumentInfo:
                 if text in matching_text:
                     name_coordinates.append([x1, y1, x2, y2])
             result = {
-                "E-Aadhaar Name": " ".join(matching_text),
+                "E-Aadhaar Name in Native": " ".join(matching_text),
                 "coordinates": name_coordinates
             }
             return result
         except Exception as e:
-            self.logger.error(f"| E-Aadhaar Name: {e}")
+            self.logger.error(f"| E-Aadhaar Name in Native: {e}")
             return result
 
     def _extract_mobile_number(self):
