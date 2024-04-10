@@ -37,7 +37,7 @@ class WriteRedactedDocumentXML:
         coordinates_list = [j for i in self.result_data for j in i['coordinates'] if len(j) != 0]
 
         for x1, y1, x2, y2 in coordinates_list:
-            xml_data.append(f'0,0,0,,,,0,0,0,0,0,0,,vv,CVDPS,vv,{frame_id},{document_id},0,{count_index},{x1},{y1},{x2},{y2},0,0,')
+            xml_data.append(f'0,0,0,,,,0,0,0,0,0,0,,vv,CVDPS,vv,{frame_id},{document_id},0,{count_index},{x1},{y1},{x2},{y2},0,0')
             count_index += 1
 
         return xml_data

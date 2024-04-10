@@ -37,7 +37,7 @@ class WriteRejectedDocumentXML:
         count_index = 1
         for coords in self.content:
             x1, y1, x2, y2 = coords
-            data.append(f'0,0,0,,,,0,0,0,0,0,0,,vv,CVDPS,vv,{self.frame_id},{self.doc_id},0,{count_index},{x1},{y1},{x2},{y2},0,0,')
+            data.append(f'0,0,0,,,,0,0,0,0,0,0,,vv,CVDPS,vv,{self.frame_id},{self.doc_id},0,{count_index},{x1},{y1},{x2},{y2},0,0')
             count_index += 1
         return data
 
