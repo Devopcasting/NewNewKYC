@@ -32,6 +32,8 @@ class AadhaarCardDocumentInfo:
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
+
+        print(self.coordinates_default)
         
     def _extract_dob(self):
         result = {
@@ -97,6 +99,7 @@ class AadhaarCardDocumentInfo:
                 "Aadhaar Gender": gender_text,
                 "coordinates": gender_coordinates
             }
+            print(result)
             return result
         except Exception as e:
             self.logger.error(f"| Aadhaar Gender: {e}")

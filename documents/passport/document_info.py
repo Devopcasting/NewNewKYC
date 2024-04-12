@@ -206,7 +206,7 @@ class PassportDocumentInfo:
             given_name_cords = []
             matching_line_index = None
             given_name_coordinates = []
-            matching_text_regex =  r"\b(?:given|names|giver|igiven|ghee)\b"
+            matching_text_regex =  r"\b(?:given|names|giver|igiven|ghee|grven)\b"
         
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
@@ -220,9 +220,9 @@ class PassportDocumentInfo:
             """get the coordinates"""
             for i in range(matching_line_index, len(self.coordinates)):
                 text = self.coordinates[i][4]
-                if text.lower() in ["eo","ea","ee","fort","wef","ly","fin","/sex","sax","indian","wen","wanfafa","dore","fier","sex","pl","ie","i3ex","wafers","pepo","or","ent","seal","fer"]:
+                if text.lower() in ["eo", "ea", "ms", "fi", "ee", "fort", "wef", "ly", "fin", "/sex", "sax","indian","wen","wanfafa","dore","fier","sex","pl","ie","i3ex","wafers","pepo","or","ent","seal","fer"]:
                     break
-                if text.isupper() or text[0].isupper() and text.lower() not in ["given","names","giver","igiven","ghee"]:
+                if text.isupper() or text[0].isupper() and text.lower() not in ["given","names","giver","igiven","ghee","grven","name","hote", "ga", "seouse"]:
                     given_name_cords.append([x1, y1, x2, y2])
                     given_name_text += " "+text
         
@@ -322,6 +322,53 @@ class PassportDocumentInfo:
             return result
         except Exception as e:
             self.logger.error(f"| Passport Mother Name: {e}")
+            return result
+    
+    def _extract_spouse_name(self):
+        result = {
+            "Passport Spouse Name": "",
+            "coordinates": []
+        }
+        try:
+            spouse_name = ""
+            matching_index = None
+            spouse_name_coordinates = []
+            spouse_name_list = []
+
+            spouse_regex = r"(?:spouse|seouse)"
+            split_text_list = [i for i in self.text_data.splitlines() if len(i) != 0]
+            
+            for i,text in enumerate(split_text_list):
+                if re.search(spouse_regex, text, flags=re.IGNORECASE):
+                    matching_index = i
+                    break
+            if matching_index is None:
+                return result
+            
+            """Get the coordinates"""
+            for i in range(matching_index, len(split_text_list)):
+                if split_text_list[i].isupper():
+                    spouse_name += " "+ split_text_list[i]
+                    spouse_name_list = split_text_list[i].split()
+                    break
+            if not spouse_name_list:
+                return result
+            
+            if len(spouse_name_list) > 1:
+                spouse_name_list = spouse_name_list[:-1]
+
+            for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
+                if text in spouse_name_list:
+                    spouse_name_coordinates.append([x1, y2, x2, y2])
+                if len(spouse_name_coordinates) == len(spouse_name_list):
+                    break
+            result = {
+                "Passport Spouse Name": spouse_name,
+                "coordinates": spouse_name_coordinates
+            }
+            return result
+        except Exception as e:
+            self.logger.error(f"| Passport Spouse Name: {e}")
             return result
         
     def _extract_ind_name(self):
@@ -457,6 +504,10 @@ class PassportDocumentInfo:
                 ind_name = self._extract_ind_name()
                 passport_doc_info_list.append(ind_name)
 
+                """Collect Spouse name"""
+                # spouse_name = self._extract_spouse_name()
+                # passport_doc_info_list.append(spouse_name)
+
                 """Collect Pincode"""
                 pincode = self._extract_pincode()
                 passport_doc_info_list.append(pincode)
@@ -531,6 +582,13 @@ class PassportDocumentInfo:
                     return {"message": "Unable to extract IND name from Passport", "status": "REJECTED"}
                 passport_doc_info_list.append(ind_name)
 
+                """Collect Spouse name"""
+                # spouse_name = self._extract_spouse_name()
+                # if len(spouse_name['coordinates']) == 0:
+                #     self.logger.error("| Passport spouse name not found")
+                # else:
+                #     passport_doc_info_list.append(spouse_name)
+                
                 """Collect Pincode"""
                 pincode = self._extract_pincode()
                 passport_doc_info_list.append(pincode)

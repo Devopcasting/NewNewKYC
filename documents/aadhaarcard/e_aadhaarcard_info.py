@@ -105,38 +105,28 @@ class EAadhaarCardDocumentInfo:
         try:
             gender_text = ""
             gender_coordinates = []
-            matching_index = None
             coordinates = self.coordinates_default
 
             """Get the matching index number of gender"""
             for i ,(x1,y1,x2,y2,text) in enumerate(coordinates):
                 if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale"]:
-                     matching_index = i
+                     gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], coordinates[i][2], coordinates[i][3]]
                      gender_text = text
                      break
-            if matching_index is None:
+            if not gender_coordinates:
                 coordinates = self.coordinates
                 """Try with self.coordinates"""
                 for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
                     if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale"]:
-                        matching_index = i
+                        gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], coordinates[i][2], coordinates[i][3]]
                         gender_text = text
                         break
-                if matching_index is None:
+                if not gender_coordinates:
                     return result
                 
-            
-            """Revese loop from gender index until DOB"""
-            for i in range(matching_index, -1, -1):
-                 if re.match(r'^\d{2}/\d{2}/\d{4}$', coordinates[i][4]) or re.match(r'^\d{4}$', coordinates[i][4]):
-                     break
-                 else:
-                     gender_coordinates.append([coordinates[i][0], coordinates[i][1], 
-                                           coordinates[i][2], coordinates[i][3]])
-            
             result = {
                 "E-Aadhaar Gender": gender_text,
-                "coordinates": [[gender_coordinates[-1][0], gender_coordinates[-1][1], gender_coordinates[0][2], gender_coordinates[0][3]]]
+                "coordinates": [gender_coordinates]
             }
             return result
         except Exception as e:
@@ -233,7 +223,6 @@ class EAadhaarCardDocumentInfo:
                      check_first_chars_capital = lambda s: all(word[0].isupper() for word in re.findall(r'\b\w+', s))
                      if check_first_chars_capital and clean_text[i].lower() not in match_2_keywords:
                          matching_text = clean_text[i].split()
-                         print(matching_text)
                          break
                 if not matching_text:
                     return result
