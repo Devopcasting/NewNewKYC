@@ -19,12 +19,7 @@ class ProcessDocuments:
             try:
                 document_info = self.in_progress_status_doc_q.get()
                 if document_info:
-                    """Check if the file path exists"""
-                    is_filpath_exists = self._check_file_path_exits(document_info['path'])
-                    if is_filpath_exists:
-                        self._process_document(document_info)
-                    else:
-                        self._update_status_file_not_available(document_info['taskId'], document_info['path'])
+                    self._process_document(document_info)
                 sleep(5)
             except Exception as e:
                 self.logger.error(f"| Processing document: {str(e)}")
@@ -90,23 +85,3 @@ class ProcessDocuments:
     def _get_prefix_name(self, document_path: str) -> str:
         room_name, room_id = document_path.split("\\")[-3:-1]
         return f"{room_name}+{room_id}+"
-    
-    def _check_file_path_exits(self, filepath: str) -> bool:
-        if not os.path.exists(filepath):
-            return False
-        return True
-    
-    def _update_status_file_not_available(self, taskid: str, filepath: str):
-        database_name = "upload"
-        collection_name = "fileDetails"
-        database = self.db_client[database_name]
-        collection = database[collection_name]
-        query = {"taskId": taskid}
-        update = {
-            "$set": {
-                "status": "REJECTED",
-                "taskResult": "Document file not found"
-                }
-            }
-        collection.update_one(query, update)
-        self.logger.info(f"| Document file not found: {filepath}")
