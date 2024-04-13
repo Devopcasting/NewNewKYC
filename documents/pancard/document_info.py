@@ -27,8 +27,10 @@ class PancardDocumentInfo:
     
     def _extract_text_coordinates(self):
         self.coordinates = TextCoordinates(self.document_path, lang_type=None).generate_text_coordinates()
+        self.coordinates_try1 = TextCoordinates(self.document_path, lang_type="dllang").generate_text_coordinates()
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data = pytesseract.image_to_string(self.document_path, lang="eng", config=tesseract_config)
+        #print(self.coordinates)
     
     def _extract_pancard_number(self):
         result = {
@@ -62,7 +64,13 @@ class PancardDocumentInfo:
                     pancard_number_coordinates.append([self.coordinates[i][0], self.coordinates[i][1], self.coordinates[i][2], self.coordinates[i][3]])
 
             if not pancard_number_coordinates:
-                return result
+                """Try with other coordinates"""
+                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_try1):
+                    if len(text) in (7,10) and text.isupper() and contains_digit_and_alpha(text):
+                        pancard_number_text += " "+ text
+                        pancard_number_coordinates.append([self.coordinates_try1[i][0], self.coordinates_try1[i][1], self.coordinates_try1[i][2], self.coordinates_try1[i][3]])
+                if not pancard_number_coordinates:
+                    return result
                
             """Get the final coordinates"""
             for i in pancard_number_coordinates:
@@ -95,7 +103,15 @@ class PancardDocumentInfo:
                     pancard_dob_text += " "+ text
                     dob_coords.append([x1, y1, x2, y2])
             if not dob_coords:
-                return result
+                year_pattern = r'\b\d{4}\b'
+                """Try if the string contains valid year pattern"""
+                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
+                    if re.search(year_pattern, text):
+                        pancard_dob_text += " "+ text
+                        dob_coords.append([x1, y1, x2, y2])
+                        break
+                if not dob_coords:
+                    return result
             
             """Get the coordinates"""
             for i in dob_coords:
@@ -179,7 +195,7 @@ class PancardDocumentInfo:
     def _identify_pancard_patterns(self) -> int:
         pancard_pattern_keyword_search = ["father's name", "father", "/eather's", "father's", 
                                           "ffatubr's", "fathers", "hratlieies", "ffatugr's",
-                                          "/father s name", "father s name", "/father's", "facer","race"]
+                                          "/father s name", "father s name", "/father's", "facer","race", "eaters"]
         for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
             if text.lower() in pancard_pattern_keyword_search:
                 return 1
@@ -222,7 +238,7 @@ class PancardDocumentInfo:
                     """Father's Name"""
                     matching_text_keyword_fathername = ["father's name", "father", "/eather's", "father's", 
                                           "ffatubr's", "fathers", "hratlieies", "ffatugr's",
-                                          "/father s name", "father s name", "/father's", "facer","race"]
+                                          "/father s name", "father s name", "/father's", "facer","race", "eaters"]
                     fathers_name_p1 = PancardPattern1(self.coordinates, self.text_data, matching_text_keyword_fathername, "Father").extract_user_father_name()
                     fathers_name_p1_status = True
                     if len(fathers_name_p1['coordinates']) != 0:

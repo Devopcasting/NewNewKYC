@@ -32,6 +32,7 @@ class EAadhaarCardDocumentInfo:
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng")
+        #print(self.coordinates)
         
     def _extract_dob(self) -> dict:
         result = {
@@ -158,7 +159,7 @@ class EAadhaarCardDocumentInfo:
                         break
                 if matching_index is None:
                     return result
-            
+
             """Get the coordinates"""
             for i in range(matching_index, len(coordinates)):
                 text = coordinates[i][4]
@@ -167,12 +168,16 @@ class EAadhaarCardDocumentInfo:
                     aadhaar_number_text += " "+ text
                 if len(aadhaar_number_text_coords) == 3:
                     break
+            
             if not aadhaar_number_text_coords:
                 return result
             
-            for i in aadhaar_number_text_coords[:-1]:
+            if len(aadhaar_number_text_coords) > 1:
+                aadhaar_number_text_coords =aadhaar_number_text_coords[:-1]
+
+            for i in aadhaar_number_text_coords:
                 for k,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                    if i in text:
+                    if i == text:
                         aadhaar_number_coordinates.append([x1,y1,x2,y2])
             result = {
                 "E-Aadhaar Number": aadhaar_number_text,
