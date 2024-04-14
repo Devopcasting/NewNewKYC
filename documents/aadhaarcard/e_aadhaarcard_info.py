@@ -259,7 +259,7 @@ class EAadhaarCardDocumentInfo:
 
             """Clean the data text"""
             clean_text = [i for i in self.text_data_regional.split("\n") if len(i) != 0]
-
+            print(clean_text)
             """Get the above matching text"""
             matching_text = []
             keywords_regex = r"\b(?:dob|birth|bith|year|binh|008)\b"

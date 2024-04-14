@@ -33,7 +33,9 @@ class AadhaarCardDocumentInfo:
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
 
-        print(self.coordinates_default)
+        print(self.coordinates_regional)
+        #print(self.text_data_regional)
+        print( self.text_data_default)
         
     def _extract_dob(self):
         result = {
@@ -82,15 +84,23 @@ class AadhaarCardDocumentInfo:
             gender_pattern = r"male|female|femala|mala"
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 if re.search(gender_pattern, text, flags=re.IGNORECASE):
-                    gender_coordinates.append([x1, y1, x2, y2])
-                    gender_text = text
+                    if self.coordinates_default[i -1][4] == "/":
+                        gender_coordinates.append([self.coordinates_default[i - 2][0], self.coordinates_default[i - 2][1], x2, y2])
+                        gender_text = text
+                    else:
+                        gender_coordinates.append([self.coordinates_default[i - 1][0], self.coordinates_default[i - 1][1], x2, y2])
+                        gender_text = text
                     break
             if not gender_coordinates:
                 """Try getting the coordinates from coordinates_regional"""
                 for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
                     if re.search(gender_pattern, text, flags=re.IGNORECASE):
-                        gender_text = text
-                        gender_coordinates.append([self.coordinates_regional[i -1][0], self.coordinates_regional[i -1][1], x2, y2])
+                        if self.coordinates_regional[i -1][4] == "/":
+                            gender_coordinates.append([self.coordinates_regional[i -2][0], self.coordinates_regional[i -2][1], x2, y2])
+                            gender_text = text
+                        else:
+                            gender_coordinates.append([self.coordinates_regional[i -1][0], self.coordinates_regional[i -1][1], x2, y2])
+                            gender_text = text
                         break
                 if not gender_coordinates:
                     return result
@@ -99,7 +109,7 @@ class AadhaarCardDocumentInfo:
                 "Aadhaar Gender": gender_text,
                 "coordinates": gender_coordinates
             }
-            print(result)
+            
             return result
         except Exception as e:
             self.logger.error(f"| Aadhaar Gender: {e}")
@@ -118,7 +128,7 @@ class AadhaarCardDocumentInfo:
 
             """get the index of male/female"""
             matching_index = None
-            gender_pattern = r"male|female"
+            gender_pattern = r"male|female|femala|mala|femate|fomale|femalp"
             for i,(x1,y1,x2,y2,text) in enumerate(self.coordinates_default):
                 if re.search(gender_pattern, text, flags=re.IGNORECASE):
                     matching_index = i
@@ -146,15 +156,19 @@ class AadhaarCardDocumentInfo:
                 if len(text_coordinates) == 3:
                     break
         
-            for i in text_coordinates[:-1]:
+            if len(text_coordinates) > 1:
+                text_coordinates = text_coordinates[:-1]
+
+            for i in text_coordinates:
                 for k,(x1,y1,x2,y2,text) in enumerate(self.coordinates_default):
-                    if i in text:
+                    if i == text:
                         aadhaarcard_coordinates.append([x1, y1, x2, y2])
 
             result = {
                 "Aadhaar Number": aadhaarcard_text,
                 "coordinates": aadhaarcard_coordinates
             }
+           
             return result
         except Exception as e:
             self.logger.error(f"| Aadhaar Number: {e}")
@@ -222,14 +236,18 @@ class AadhaarCardDocumentInfo:
             name_text = ""
             name_coordinates = []
 
+            """First try with default text coordinates"""
+            text_data = self.text_data_default
+            coordinates = self.coordinates_default
+
             """split the text into lines"""
-            lines = [i for i in self.text_data_regional.splitlines() if len(i) != 0]
-    
+            lines = [i for i in text_data.splitlines() if len(i) != 0]
+            
             """get the matching text index"""
-            gender_pattern = r"male|female"
+            gender_pattern = r"male|female|femala|mala|femate|fomale|femalp"
             for i, item in enumerate(lines):
                 if re.search(gender_pattern, item, flags=re.IGNORECASE):
-                    name_text = lines[i - 4]
+                    name_text = lines[i - 3]
                     break
             if not name_text:
                 return result
@@ -240,7 +258,7 @@ class AadhaarCardDocumentInfo:
                 name_text_split = name_text_split[:-1]
         
             """get the coordinates"""
-            for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
+            for i,(x1, y1, x2, y2, text) in enumerate(coordinates):
                 if text in name_text_split:
                     name_coordinates.append([x1, y1, x2, y2])
                 if len(name_text_split) == len(name_coordinates):
