@@ -320,6 +320,8 @@ indian_states_cities = [
     "Adra",
     "DUBAI",
     "Muscat",
-    "ANDHERI"
+    "ANDHERI",
+    "Mahorachtra",
+    "Matiorashta"
     ]
     
