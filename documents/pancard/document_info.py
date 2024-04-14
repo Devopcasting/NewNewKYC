@@ -30,7 +30,6 @@ class PancardDocumentInfo:
         self.coordinates_try1 = TextCoordinates(self.document_path, lang_type="dllang").generate_text_coordinates()
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data = pytesseract.image_to_string(self.document_path, lang="eng", config=tesseract_config)
-        #print(self.coordinates)
     
     def _extract_pancard_number(self):
         result = {

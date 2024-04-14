@@ -33,10 +33,6 @@ class AadhaarCardDocumentInfo:
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
 
-        print(self.coordinates_regional)
-        #print(self.text_data_regional)
-        print( self.text_data_default)
-        
     def _extract_dob(self):
         result = {
             "Aadhaar DOB": "",

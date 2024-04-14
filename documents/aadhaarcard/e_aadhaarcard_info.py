@@ -32,7 +32,7 @@ class EAadhaarCardDocumentInfo:
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng")
-        #print(self.coordinates)
+        
         
     def _extract_dob(self) -> dict:
         result = {
@@ -43,13 +43,16 @@ class EAadhaarCardDocumentInfo:
             dob_text = ""
             dob_coordinates = []
             dob_coords = []
-            split_pattern = "/"
             date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}|\d{4}|\d{2}/\d{4}|\d{2}/\d{2}'
+
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 match = re.search(date_pattern, text)
                 if match:
                     if "-" in text:
                         split_pattern = "-"
+                    else:
+                        split_pattern = "/"
+
                     if self._validate_date(text, split_pattern):
                         dob_coords.append([x1, y1, x2, y2])
                         dob_text += " "+ text
@@ -61,9 +64,13 @@ class EAadhaarCardDocumentInfo:
                     if match:
                         if "-" in text:
                             split_pattern = "-"
+                        else:
+                            split_pattern = "/"
+
                         if self._validate_date(text, split_pattern):
                              dob_coords.append([x1, y1, x2, y2])
                              dob_text += " "+ text
+
                 if not dob_coords:
                     return result
                 
@@ -83,19 +90,21 @@ class EAadhaarCardDocumentInfo:
     
     def _validate_date(self, date_str: str, split_pattern: str) -> bool:
         try:
+            
             # Split the date string into day, month, and year
-            day, month, year = map(int, date_str.split(split_pattern))
+            day, month, year = map(int, date_str.split('/'))
             
             # Check if the date is within valid ranges
             if not (1 <= day <= 31 and 1 <= month <= 12 and 1000 <= year <= 2999):
                 return False
+            
             # Check for leap year if necessary
             if month == 2 and day > 28 and not (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)):
                 return False
-            # Create a datetime object to validate the date
+            # # Create a datetime object to validate the date
             datetime.datetime(year, month, day)
             return True
-        except ValueError:
+        except Exception as e:
             return False
     
     def _extract_gender(self):
@@ -110,17 +119,26 @@ class EAadhaarCardDocumentInfo:
 
             """Get the matching index number of gender"""
             for i ,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale"]:
-                     gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], coordinates[i][2], coordinates[i][3]]
-                     gender_text = text
-                     break
+                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale", "fertale"]:
+                    if coordinates[i -1][4] == "/":
+                        gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], x2, y2]
+                        gender_text = text
+                    else:
+                        gender_coordinates = [coordinates[i -1][0], coordinates[i -1][1], x2, y2]
+                        gender_text = text     
+                    break
+
             if not gender_coordinates:
                 coordinates = self.coordinates
                 """Try with self.coordinates"""
                 for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                    if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale"]:
-                        gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], coordinates[i][2], coordinates[i][3]]
-                        gender_text = text
+                    if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale"]:
+                        if coordinates[i -1][4] == "/":
+                            gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], x2, y2]
+                            gender_text = text
+                        else:
+                            gender_coordinates = [coordinates[i -1][0], coordinates[i -1][1], x2, y2]
+                            gender_text = text
                         break
                 if not gender_coordinates:
                     return result
@@ -148,13 +166,13 @@ class EAadhaarCardDocumentInfo:
 
             """Get the gender index"""
             for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate","#femste","fomale"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate","#femste","fomale", "fertale"]:
                     matching_index = i
                     break
             if matching_index is None:
                 coordinates = self.coordinates_default
                 for i,(x1, y1, x2, y2, text) in enumerate(coordinates):
-                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale"]:
+                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale"]:
                         matching_index = i
                         break
                 if matching_index is None:
@@ -200,26 +218,28 @@ class EAadhaarCardDocumentInfo:
 
             """Clean the data text"""
             clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
-        
+
             """Get the above matching text"""
             matching_text = []
             match_1_keywords = ["dob", "birth", "bith", "year", "binh"]
             for i,text in enumerate(clean_text):
                 if any(keyword in text.lower() for keyword in match_1_keywords):
-                     matching_text = clean_text[i - 1].split()
-                     break
+                    if len(clean_text[i - 1]) == 1:
+                        matching_text = clean_text[i - 2].split()
+                    else:
+                        matching_text = clean_text[i - 1].split()
+                    break
                 
             if not matching_text:
                 """Check if name is avilable after 'To' """
-                match_2_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta"]
+                match_2_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to."]
                 for i, text in enumerate(clean_text):
                     if any(keyword in text.lower() for keyword in match_2_keywords):
                         matching_text_index = i
                         break
-
                 if matching_text_index is None:
                     return result
-                
+    
                 for i in range(matching_text_index + 1, len(clean_text)):
                      words = clean_text[i].split()
                      all_lower = any(map(lambda word: word.islower(), words))
@@ -259,7 +279,7 @@ class EAadhaarCardDocumentInfo:
 
             """Clean the data text"""
             clean_text = [i for i in self.text_data_regional.split("\n") if len(i) != 0]
-            print(clean_text)
+            
             """Get the above matching text"""
             matching_text = []
             keywords_regex = r"\b(?:dob|birth|bith|year|binh|008)\b"
