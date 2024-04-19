@@ -32,6 +32,7 @@ class AadhaarCardDocumentInfo:
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
+        print(self.coordinates_default)
 
     def _extract_dob(self):
         result = {
@@ -76,11 +77,11 @@ class AadhaarCardDocumentInfo:
         try:
             gender_text = ""
             gender_coordinates = []
-
+            print(self.coordinates_default)
             gender_pattern = r"male|female|femala|mala"
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 if re.search(gender_pattern, text, flags=re.IGNORECASE):
-                    if self.coordinates_default[i -1][4] == "/":
+                    if self.coordinates_default[i -1][4] == "/" or self.coordinates_default[i -1][4] == "|":
                         gender_coordinates.append([self.coordinates_default[i - 2][0], self.coordinates_default[i - 2][1], x2, y2])
                         gender_text = text
                     else:
@@ -91,7 +92,7 @@ class AadhaarCardDocumentInfo:
                 """Try getting the coordinates from coordinates_regional"""
                 for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
                     if re.search(gender_pattern, text, flags=re.IGNORECASE):
-                        if self.coordinates_regional[i -1][4] == "/":
+                        if self.coordinates_regional[i -1][4] == "/" or self.coordinates_default[i -1][4] == "|":
                             gender_coordinates.append([self.coordinates_regional[i -2][0], self.coordinates_regional[i -2][1], x2, y2])
                             gender_text = text
                         else:
@@ -238,13 +239,15 @@ class AadhaarCardDocumentInfo:
 
             """split the text into lines"""
             lines = [i for i in text_data.splitlines() if len(i) != 0]
-            
+            print(lines)
+            print(coordinates)
             """get the matching text index"""
             gender_pattern = r"male|female|femala|mala|femate|fomale|femalp"
             for i, item in enumerate(lines):
                 if re.search(gender_pattern, item, flags=re.IGNORECASE):
                     name_text = lines[i - 3]
                     break
+            print(name_text)
             if not name_text:
                 return result
         

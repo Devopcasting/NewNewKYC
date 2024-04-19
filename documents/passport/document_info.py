@@ -24,9 +24,9 @@ class PassportDocumentInfo:
     
     def _extract_text_coordinates(self):
         self.coordinates = TextCoordinates(self.document_path).generate_text_coordinates()
-        print(self.coordinates)
         tesseract_config = r'--oem 3 --psm 11'
         self.text_data = pytesseract.image_to_string(self.document_path, lang="eng", config=tesseract_config)
+        print(self.coordinates)
         
         
     def _extract_passport_number(self):

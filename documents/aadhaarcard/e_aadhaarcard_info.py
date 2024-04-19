@@ -32,6 +32,9 @@ class EAadhaarCardDocumentInfo:
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng")
+
+        print(self.coordinates_default)
+       
         
         
     def _extract_dob(self) -> dict:
@@ -46,13 +49,13 @@ class EAadhaarCardDocumentInfo:
             date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}|\d{4}|\d{2}/\d{4}|\d{2}/\d{2}'
 
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
-                match = re.search(date_pattern, text)
+                match = re.search(date_pattern, text) or re.search(r'\d{8}', text)
                 if match:
                     if "-" in text:
                         split_pattern = "-"
                     else:
                         split_pattern = "/"
-
+                    
                     if self._validate_date(text, split_pattern):
                         dob_coords.append([x1, y1, x2, y2])
                         dob_text += " "+ text
@@ -60,7 +63,7 @@ class EAadhaarCardDocumentInfo:
             if not dob_coords:
                 """Check with other coordinates"""
                 for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates):
-                    match = re.search(date_pattern, text)
+                    match = re.search(date_pattern, text) or re.search(r'\d{8}', text)
                     if match:
                         if "-" in text:
                             split_pattern = "-"
@@ -282,7 +285,7 @@ class EAadhaarCardDocumentInfo:
             
             """Get the above matching text"""
             matching_text = []
-            keywords_regex = r"\b(?:dob|birth|bith|year|binh|008)\b"
+            keywords_regex = r"\b(?:dob|birth|bith|year|binh|008|pub|farce)\b"
             for i,text in enumerate(clean_text):
                 if re.search(keywords_regex, text.lower(), flags=re.IGNORECASE):
                      matching_text = clean_text[i - 2].split()
@@ -297,6 +300,24 @@ class EAadhaarCardDocumentInfo:
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
                 if text in matching_text:
                     name_coordinates.append([x1, y1, x2, y2])
+            
+            """Check if name is avilable after 'To' """
+            clean_text_default = [i for i in self.text_data_default.split("\n") if len(i) != 0]
+            match_2_keywords = ["tahar", "to", "to,", "ta", "to."]
+            match_2_text = []
+            
+            for i, text in enumerate(clean_text_default):
+                if any(keyword in text.lower() for keyword in match_2_keywords):
+                    match_2_text = clean_text_default[i + 1]
+                    break
+
+            if match_2_text:
+                if len(match_2_text) > 1:
+                    match_2_text = match_2_text[:-1]
+                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
+                    if text in match_2_text:
+                        name_coordinates.append([x1, y1, x2, y2])
+            
             result = {
                 "E-Aadhaar Name in Native": " ".join(matching_text),
                 "coordinates": name_coordinates
@@ -383,7 +404,7 @@ class EAadhaarCardDocumentInfo:
             """get the coordinates"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 for state_pattern in self.states:
-                    if re.search(state_pattern, text, re.IGNORECASE):
+                    if re.search(state_pattern, text, re.IGNORECASE) and text.lower() != "sitrongs" and text.lower() != "electronically":
                         place_coordinates.append([x1, y1, x2, y2])
                         place_name += " "+ text
                         
