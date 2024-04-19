@@ -38,8 +38,8 @@ class FilterInProgressStatusDocuments:
                     if self._check_file_path_exits(document['uploadDir']) and self._check_file_extenstion(document['fileExtension']) :
                         self.insert_in_progress_status_doc_info(document)
                     else:
-                        self._update_status_invalid_file(document['taskId'], document['uploadDir'])
-                        #self._webhook_post_request(document['taskId'])
+                        #self._update_status_invalid_file(document['taskId'], document['uploadDir'])
+                        self._webhook_post_request(document['taskId'])
                 sleep(5)
         except Exception as e:
             self.logger.error(f"| While querying IN_PROGRESS status: {e}")
