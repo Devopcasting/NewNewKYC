@@ -322,6 +322,7 @@ indian_states_cities = [
     "Muscat",
     "ANDHERI",
     "Mahorachtra",
-    "Matiorashta"
+    "Matiorashta",
+    "Maharastra",
+    "Goz"
     ]
-    
