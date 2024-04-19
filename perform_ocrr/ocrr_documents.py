@@ -3,7 +3,7 @@ import json
 from config.mongodb_connection import EastablishMongoDBConnection
 from document_type_identification.identify_documents import IdentifyDocumentType
 from write_xml.rejected_doc_coordinates import GetRejectedDocumentCoordinates
-from write_xml.rejected_document_bkp import WriteRejectedDocumentXML
+from write_xml.rejected_document import WriteRejectedDocumentXML
 from write_xml.redacted_document import WriteRedactedDocumentXML
 from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
 from documents.cdsl.document_info import CDSLDocumentInfo
