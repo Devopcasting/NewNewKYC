@@ -68,4 +68,13 @@ class WriteRejectedDocumentXML:
         if os.path.exists(xml_file_path):
             os.remove(xml_file_path)
         tree.write(xml_file_path, encoding="utf-8", xml_declaration=True)
+
+        """Create Empty file for REJECTED doc"""
+        filename_list = self.xml_file_name.split('_', 1)
+        new_filename = f"{filename_list[0]}-RJ_{filename_list[-1]}"
+        new_filename = new_filename.rsplit('.', 1)[0] + '.xml'
+        rejected_doc_file_path = os.path.join(self.xml_path, new_filename)
+        with open(rejected_doc_file_path, "w"):
+            pass
+        
         return True
