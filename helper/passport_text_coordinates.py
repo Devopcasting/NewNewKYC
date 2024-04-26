@@ -8,8 +8,8 @@ class TextCoordinates:
     
     # func: generate coordinates
     def generate_text_coordinates(self) -> list:
+        tesseract_config = r'--oem 3 --psm 11'
         if self.lang_type is None:
-            tesseract_config = r'--oem 3 --psm 11'
             data = pytesseract.image_to_data(self.image_path, output_type=pytesseract.Output.DICT, config=tesseract_config)
         elif self.lang_type == "default":
             data = pytesseract.image_to_data(self.image_path, output_type=pytesseract.Output.DICT, lang="eng")
