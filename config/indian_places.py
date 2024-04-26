@@ -324,5 +324,15 @@ indian_states_cities = [
     "Mahorachtra",
     "Matiorashta",
     "Maharastra",
-    "Goz"
+    "Goz",
+    "Nashik",
+    "Matarast",
+    "Mahatashifa",
+    "Bengalury",
+    "Kerchanahali",
+    "Whitefield",
+    "TRENGALURU",
+    "Thubarahalll",
+    "Bangatore",
+    "Jubilee"
     ]
