@@ -31,10 +31,8 @@ class EAadhaarCardDocumentInfo:
         self.coordinates_default = TextCoordinates(self.document_path, lang_type="default").generate_text_coordinates()
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
-        self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng")
-
-        print(self.coordinates_default)
-       
+        tesseract_config = r'--oem 3 --psm 11'
+        self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
         
         
     def _extract_dob(self) -> dict:
@@ -119,10 +117,10 @@ class EAadhaarCardDocumentInfo:
             gender_text = ""
             gender_coordinates = []
             coordinates = self.coordinates_default
-
+            
             """Get the matching index number of gender"""
             for i ,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale", "fertale"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale", "fertale", "malo"]:
                     if coordinates[i -1][4] == "/":
                         gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], x2, y2]
                         gender_text = text
@@ -135,7 +133,7 @@ class EAadhaarCardDocumentInfo:
                 coordinates = self.coordinates
                 """Try with self.coordinates"""
                 for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                    if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale"]:
+                    if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale", "malo"]:
                         if coordinates[i -1][4] == "/":
                             gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], x2, y2]
                             gender_text = text
@@ -169,13 +167,13 @@ class EAadhaarCardDocumentInfo:
 
             """Get the gender index"""
             for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate","#femste","fomale", "fertale"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate","#femste","fomale", "fertale", "malo"]:
                     matching_index = i
                     break
             if matching_index is None:
                 coordinates = self.coordinates_default
                 for i,(x1, y1, x2, y2, text) in enumerate(coordinates):
-                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale"]:
+                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale", "malo"]:
                         matching_index = i
                         break
                 if matching_index is None:
@@ -216,58 +214,107 @@ class EAadhaarCardDocumentInfo:
         }
         try:
             name_coordinates = []
-            matching_text_index = None
-            matching_text = []
+            matching_text = ""
+            matching_text_top = []
+            matching_text_bottom = []
 
-            """Clean the data text"""
             clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
-
-            """Get the above matching text"""
-            matching_text = []
-            match_1_keywords = ["dob", "birth", "bith", "year", "binh"]
-            for i,text in enumerate(clean_text):
-                if any(keyword in text.lower() for keyword in match_1_keywords):
-                    if len(clean_text[i - 1]) == 1:
-                        matching_text = clean_text[i - 2].split()
-                    else:
-                        matching_text = clean_text[i - 1].split()
-                    break
-                
-            if not matching_text:
-                """Check if name is avilable after 'To' """
-                match_2_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to."]
-                for i, text in enumerate(clean_text):
-                    if any(keyword in text.lower() for keyword in match_2_keywords):
-                        matching_text_index = i
-                        break
-                if matching_text_index is None:
-                    return result
-    
-                for i in range(matching_text_index + 1, len(clean_text)):
-                     words = clean_text[i].split()
-                     all_lower = any(map(lambda word: word.islower(), words))
-                     if all_lower:
-                         continue
-                     check_first_chars_capital = lambda s: all(word[0].isupper() for word in re.findall(r'\b\w+', s))
-                     if check_first_chars_capital and clean_text[i].lower() not in match_2_keywords:
-                         matching_text = clean_text[i].split()
-                         break
-                if not matching_text:
-                    return result
             
-            if len(matching_text) > 1:
-                matching_text = matching_text[:-1]
+            """Get Name from Top"""
+            match_1_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to."]
+            for i, text in enumerate(clean_text):
+                if text.lower() in match_1_keywords:
+                    matching_text_top = clean_text[i + 2].split()
+                    break
+            """Get the coordinates"""
+            if matching_text_top:
+                if len(matching_text_top) > 1:
+                    matching_text_top = matching_text_top[: -1]
+                
+                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
+                    if text in matching_text_top:
+                        name_coordinates.append([x1, y1, x2, y2])
+            
+            """Get Name from Bottom"""
+            match_2_keywords = ["dob", "birth", "bith", "year", "binh"]
+            for i, text in enumerate(clean_text):
+                if text.lower() in match_2_keywords:
+                    if len(clean_text[i -1]) == 1:
+                        matching_text_bottom = clean_text[i -2].split()
+                    else:
+                        matching_text_bottom = clean_text[i -1].split()
+                    break
+            
+            if not matching_text_top and matching_text_bottom:
+                return result
             
             """Get the coordinates"""
+            if len(matching_text_bottom) > 1:
+                matching_text_bottom = matching_text_bottom[: -1]
+
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates):
-                if text in matching_text:
-                    name_coordinates.append([x1,y1,x2,y2])
-            
+                if text in matching_text_bottom:
+                    name_coordinates.append([x1, y1, x2, y2])
+
+            if matching_text_top:
+                matching_text = " ".join(matching_text_top)
+            else:
+                matching_text = " ".join(matching_text_bottom)
+
             result = {
-                "E-Aadhaar Name in English": " ".join(matching_text),
+                "E-Aadhaar Name in English": matching_text,
                 "coordinates": name_coordinates
             }
             return result
+            # """Clean the data text"""
+            # clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
+
+            # """Get the above matching text"""
+            # matching_text = []
+            # match_1_keywords = ["dob", "birth", "bith", "year", "binh"]
+            # for i,text in enumerate(clean_text):
+            #     if any(keyword in text.lower() for keyword in match_1_keywords):
+            #         if len(clean_text[i - 1]) == 1:
+            #             matching_text = clean_text[i - 2].split()
+            #         else:
+            #             matching_text = clean_text[i - 1].split()
+            #         break
+                
+            # if not matching_text:
+            #     """Check if name is avilable after 'To' """
+            #     match_2_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to."]
+            #     for i, text in enumerate(clean_text):
+            #         if any(keyword in text.lower() for keyword in match_2_keywords):
+            #             matching_text_index = i
+            #             break
+            #     if matching_text_index is None:
+            #         return result
+    
+            #     for i in range(matching_text_index + 1, len(clean_text)):
+            #          words = clean_text[i].split()
+            #          all_lower = any(map(lambda word: word.islower(), words))
+            #          if all_lower:
+            #              continue
+            #          check_first_chars_capital = lambda s: all(word[0].isupper() for word in re.findall(r'\b\w+', s))
+            #          if check_first_chars_capital and clean_text[i].lower() not in match_2_keywords:
+            #              matching_text = clean_text[i].split()
+            #              break
+            #     if not matching_text:
+            #         return result
+            
+            # if len(matching_text) > 1:
+            #     matching_text = matching_text[:-1]
+            
+            # """Get the coordinates"""
+            # for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates):
+            #     if text in matching_text:
+            #         name_coordinates.append([x1,y1,x2,y2])
+            
+            # result = {
+            #     "E-Aadhaar Name in English": " ".join(matching_text),
+            #     "coordinates": name_coordinates
+            # }
+            # return result
         except Exception as e:
             self.logger.error(f"| E-Aadhaar Name in English: {e}")
             return result
@@ -279,45 +326,97 @@ class EAadhaarCardDocumentInfo:
         }
         try:
             name_coordinates = []
+            matching_text = ""
+            matching_text_top = []
+            matching_text_bottom = []
 
-            """Clean the data text"""
-            clean_text = [i for i in self.text_data_regional.split("\n") if len(i) != 0]
-            
-            """Get the above matching text"""
-            matching_text = []
-            keywords_regex = r"\b(?:dob|birth|bith|year|binh|008|pub|farce)\b"
-            for i,text in enumerate(clean_text):
-                if re.search(keywords_regex, text.lower(), flags=re.IGNORECASE):
-                     matching_text = clean_text[i - 2].split()
-                     break
-            if not matching_text:
-                return result
-            
-            if len(matching_text) > 1:
-                matching_text = matching_text[:-1]
-            
-            """Get the coordinates"""
-            for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
-                if text in matching_text:
-                    name_coordinates.append([x1, y1, x2, y2])
-            
-            """Check if name is avilable after 'To' """
             clean_text_default = [i for i in self.text_data_default.split("\n") if len(i) != 0]
-            match_2_keywords = ["tahar", "to", "to,", "ta", "to."]
-            match_2_text = []
-            
+            print(clean_text_default)
+            print(self.coordinates_default)
+            """Get Name from Top"""
+            match_1_keywords = ["tahar", "to", "to,", "ta", "to."]
             for i, text in enumerate(clean_text_default):
-                if any(keyword in text.lower() for keyword in match_2_keywords):
-                    match_2_text = clean_text_default[i + 1]
+                if text.lower() in match_1_keywords:
+                    matching_text_top = clean_text_default[i + 1]
                     break
-
-            if match_2_text:
-                if len(match_2_text) > 1:
-                    match_2_text = match_2_text[:-1]
+            print(matching_text_top)
+            """Get the Coordinates"""
+            if matching_text_top:
+                if len(matching_text_top) > 1:
+                    matching_text_top = matching_text_top[:-1]
+                
                 for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
-                    if text in match_2_text:
+                    if text in matching_text_top:
                         name_coordinates.append([x1, y1, x2, y2])
             
+            """Get Name from Bottom"""
+            keywords_regex = r"\b(?:dob|birth|bith|year|binh|008|pub|farce|binn)\b"
+            for i,text in enumerate(clean_text_default):
+                if re.search(keywords_regex, text.lower(), flags=re.IGNORECASE):
+                    matching_text_bottom = clean_text_default[i -2]
+                    break
+
+            """Get the Coordinates"""
+            if not matching_text_top and not matching_text_bottom:
+                return result
+            
+            if len(matching_text_bottom) > 1:
+                matching_text_bottom = matching_text_bottom[:-1]
+            
+            for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
+                if text in matching_text_bottom:
+                    name_coordinates.append([x1, y1, x2, y2])
+
+
+            # """Get name from below section"""
+            # """Clean the data text"""
+            # clean_text = [i for i in self.text_data_regional.split("\n") if len(i) != 0]
+            # print(clean_text)
+            # """Get the above matching text"""
+            # matching_text = []
+            # keywords_regex = r"\b(?:dob|birth|bith|year|binh|008|pub|farce|binn)\b"
+            
+            # for i,text in enumerate(clean_text):
+            #     if re.search(keywords_regex, text.lower(), flags=re.IGNORECASE):
+            #          matching_text = clean_text[i - 2].split()
+            #          break
+
+            # print(matching_text)
+            # if matching_text:      
+            #     if len(matching_text) > 1:
+            #         matching_text = matching_text[:-1]
+            
+            #     """Get the coordinates"""
+            #     for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
+            #         if text in matching_text:
+            #             name_coordinates.append([x1, y1, x2, y2])
+            
+            # """Get name from above section"""
+            # """Check if name is avilable after 'To' """
+            # clean_text_default = [i for i in self.text_data_default.split("\n") if len(i) != 0]
+            # match_2_keywords = ["tahar", "to", "to,", "ta", "to."]
+            # match_2_text = []
+            
+            # for i, text in enumerate(clean_text_default):
+            #     if any(keyword in text.lower() for keyword in match_2_keywords):
+            #         match_2_text = clean_text_default[i + 1]
+            #         break
+            
+            # if not matching_text and match_2_text:
+            #     return result
+            
+            # if match_2_text:
+            #     if len(match_2_text) > 1:
+            #         match_2_text = match_2_text[:-1]
+            #     for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
+            #         if text in match_2_text:
+            #             name_coordinates.append([x1, y1, x2, y2])
+            
+            if matching_text_top:
+                matching_text = " ".join(matching_text_top)
+            else:
+                matching_text = " ".join(matching_text_bottom)
+
             result = {
                 "E-Aadhaar Name in Native": " ".join(matching_text),
                 "coordinates": name_coordinates
