@@ -78,7 +78,7 @@ class AadhaarCardDocumentInfo:
         try:
             gender_text = ""
             gender_coordinates = []
-            
+            print(self.coordinates_default)
             gender_pattern = r"male|female|femala|mala"
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 if re.search(gender_pattern, text, flags=re.IGNORECASE):
@@ -188,7 +188,7 @@ class AadhaarCardDocumentInfo:
             dob_pattern = re.compile(r"DOB", re.IGNORECASE)
             date_pattern = re.compile(r"\d{1,2}/\d{1,2}/\d{4}")
             year_pattern = re.compile(r"\d{4}")
-
+            
             """get the matching text index"""
             for i, item in enumerate(lines):
                 if "dOBOS" not in item and (dob_pattern.search(item) or date_pattern.search(item) or year_pattern.search(item)):
@@ -200,24 +200,26 @@ class AadhaarCardDocumentInfo:
         
             """split the name"""
             name_text_split = name_text.split()
-            if len(name_text_split) > 1:
-                name_text_split = name_text_split[:-1]
+            clean_name_text =[s for s in name_text_split if any(char.isalpha() for char in s)]
+            
+            if len(clean_name_text) > 1:
+                clean_name_text = clean_name_text[:-1]
         
             """get the coordinates"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
-                if text in name_text_split:
+                if text in clean_name_text:
                     name_coordinates.append([x1, y1, x2, y2])
-                if len(name_text_split) == len(name_coordinates):
+                if len(clean_name_text) == len(name_coordinates):
                     break
         
             if len(name_text_split) > 1:
                 result = {
-                    "Aadhaar Name in English": name_text,
+                    "Aadhaar Name in English": " ".join(clean_name_text),
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[-1][2], name_coordinates[-1][3]]]
                 }
             else:
                 result = {
-                    "Aadhaar Name in English": name_text,
+                    "Aadhaar Name in English": " ".join(clean_name_text),
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[0][2], name_coordinates[0][3]]]
             }
             return result
@@ -237,11 +239,11 @@ class AadhaarCardDocumentInfo:
             """First try with default text coordinates"""
             text_data = self.text_data_default
             coordinates = self.coordinates_default
-            print(coordinates)    
+            
             """split the text into lines"""
             
             lines = [i for i in text_data.splitlines() if len(i) != 0]
-            print(lines)
+            
             """get the matching text index"""
             gender_pattern = r"male|female|femala|mala|femate|fomale|femalp"
             for i, item in enumerate(lines):
@@ -254,24 +256,26 @@ class AadhaarCardDocumentInfo:
         
             """split the name"""
             name_text_split = name_text.split()
-            if len(name_text_split) > 1:
-                name_text_split = name_text_split[:-1]
+            clean_name_text =[s for s in name_text_split if any(char.isalpha() for char in s)]
+            
+            if len(clean_name_text) > 1:
+                clean_name_text = clean_name_text[:-1]
         
             """get the coordinates"""
             for i,(x1, y1, x2, y2, text) in enumerate(coordinates):
-                if text in name_text_split:
+                if text in clean_name_text:
                     name_coordinates.append([x1, y1, x2, y2])
-                if len(name_text_split) == len(name_coordinates):
+                if len(clean_name_text) == len(name_coordinates):
                     break
         
             if len(name_text_split) > 1:
                 result = {
-                    "Aadhaar Name in Native": name_text,
+                    "Aadhaar Name in Native": " ".join(clean_name_text),
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[-1][2], name_coordinates[-1][3]]]
                 }
             else:
                 result = {
-                    "Aadhaar Name in Native": name_text,
+                    "Aadhaar Name in Native": " ".join(clean_name_text),
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[0][2], name_coordinates[0][3]]]
                 }
             return result
@@ -319,10 +323,10 @@ class AadhaarCardDocumentInfo:
 
             """get the coordinates"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
-                if len(text) == 6 and text.isdigit():
+                if len(text) in (6,7) and text[:6].isdigit():
                     pin_code_coordinates.append([x1, y1, x2, y2])
-                    pin_code = text
-                    break
+                    pin_code += " "+text
+                    
             if not pin_code_coordinates:
                 return result
         
@@ -355,7 +359,7 @@ class AadhaarCardDocumentInfo:
 
             """get the coordinates"""
             for i,(x1, y1, x2, y2,text) in enumerate(self.coordinates_default):
-                if len(text) == 10 and text.isdigit():
+                if len(text) in (10,11) and text[:10].isdigit():
                     mobile_coordinates = [x1, y1, x2, y2]
                     mobile_number = text
                     break

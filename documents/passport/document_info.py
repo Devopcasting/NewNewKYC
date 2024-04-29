@@ -107,7 +107,7 @@ class PassportDocumentInfo:
             date_coordinates = []
 
             """date patterns for both dd/mm/yyyy and dd/mm/yy formats"""
-            date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}/\d{2}/\d{2}'
+            date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}/\d{2}/\d{2}|\d{4}/\d{4}'
 
             """get the coordinates"""
             for i, (x1,y1,x2,y2,text) in enumerate(self.coordinates):
@@ -185,7 +185,7 @@ class PassportDocumentInfo:
             for i in range(matching_line_index, len(self.coordinates)):
                 text = self.coordinates[i][4]
                 contains_no_numbers = lambda text: not bool(re.search(r'\d', text))
-                if text.isupper() and contains_no_numbers(text) and text != "SS":
+                if text.isupper() and contains_no_numbers(text) and text != "SS" and text != "IND":
                     surname_coords = [self.coordinates[i][0], self.coordinates[i][1],
                                          self.coordinates[i][2], self.coordinates[i][3]]
                     surname_text = text
@@ -226,19 +226,22 @@ class PassportDocumentInfo:
                 return result
         
             """get the coordinates"""
-            matching_given_regex = r"\b(?:given|giver|igiven|ghee|grven|name|geen|hote|ga|seouse|norms)\b"
+            print(self.coordinates)
+            matching_given_regex = r"\b(?:given|giver|igiven|ghee|grven|name|geen|hote|ga|seouse|norms|namen)\b"
             for i in range(matching_line_index, len(self.coordinates)):
                 text = self.coordinates[i][4]
                 if text.lower() in ["eo","of","pat","ste","fam","wessex","ea", "ms", "fi", "ee", 
                                     "fort", "wef", "ly", "fin", "/sex", "sax","indian","wen",
                                     "wanfafa","dore","fier","sex","pl","ie","i3ex","wafers",
-                                    "pepo","or","ent","seal","fer"]:
+                                    "pepo","or","ent","seal","fer","reiaar", "nationailty", "et", "bg"]:
                     break
-                if text.isupper() or text[0].isupper():
+                if text.isupper() or text[0].isupper() and text.lower() != "gra":
                     if not re.search(matching_given_regex, text.lower(), flags=re.IGNORECASE):
                         given_name_cords.append([self.coordinates[i][0], self.coordinates[i][1], self.coordinates[i][2], self.coordinates[i][3]])
                         given_name_text += " "+text
             
+            print(given_name_text)
+            print(given_name_cords)
             if len(given_name_cords) > 1:
                 given_name_cords = given_name_cords[:-1]
 
