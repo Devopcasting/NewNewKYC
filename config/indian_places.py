@@ -334,5 +334,19 @@ indian_states_cities = [
     "TRENGALURU",
     "Thubarahalll",
     "Bangatore",
-    "Jubilee"
+    "Jubilee",
+    "SAKKAMPATTY",
+    "Havell",
+    "Haveli",
+    "Hebatpur",
+    "GEORGI",
+    "Bongatora",
+    "CHINA",
+    "Maharashiea",
+    "Munihar",
+    "Thalaghatiapura",
+    "Talaghatapura",
+    "raghuvanahaill",
+    "Emakutam",
+    "Bandra"
     ]
