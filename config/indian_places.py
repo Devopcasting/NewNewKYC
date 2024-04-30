@@ -348,5 +348,22 @@ indian_states_cities = [
     "Talaghatapura",
     "raghuvanahaill",
     "Emakutam",
-    "Bandra"
+    "Bandra",
+    "Kompatte",
+    "Hyterabad",
+    "Rengareddi",
+    "Bengaturu",
+    "Oeonar",
+    "Govandi",
+    "Thiruvanmiyur",
+    "Tiruvanmiyur",
+    "LOKHANDWALA",
+    "Membol",
+    "ANDHERZ",
+    "Delhl",
+    "BEDAR",
+    "Muinbai",
+    "Bhilai",
+    "LOMDON",
+    "CHHINDWARA"
     ]
