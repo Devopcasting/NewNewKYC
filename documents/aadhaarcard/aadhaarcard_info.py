@@ -183,18 +183,21 @@ class AadhaarCardDocumentInfo:
 
             """split the text into lines"""
             lines = [i for i in self.text_data_default.splitlines() if len(i) != 0]
-        
+            print(lines)
             """regex patterns"""
             dob_pattern = re.compile(r"DOB", re.IGNORECASE)
             date_pattern = re.compile(r"\d{1,2}/\d{1,2}/\d{4}")
             year_pattern = re.compile(r"\d{4}")
             
             """get the matching text index"""
+            keywords_regex = r"\b(?:of|india|female|male)\b"
             for i, item in enumerate(lines):
                 if "dOBOS" not in item and (dob_pattern.search(item) or date_pattern.search(item) or year_pattern.search(item)):
+                    if re.search(keywords_regex)
                     name_text = lines[i - 1]
                     break
-
+            
+            print(name_text)
             if not name_text:
                 return result
         
@@ -222,6 +225,7 @@ class AadhaarCardDocumentInfo:
                     "Aadhaar Name in English": " ".join(clean_name_text),
                     "coordinates": [[name_coordinates[0][0], name_coordinates[0][1], name_coordinates[0][2], name_coordinates[0][3]]]
             }
+                
             return result
         except Exception as e:
             self.logger.error(f"| Aadhaar Name in English: {e}")

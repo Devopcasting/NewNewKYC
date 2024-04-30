@@ -3,6 +3,7 @@ import re
 class IdentifyDrivingLicenseDocument:
     def __init__(self, clean_text: list) -> None:
         self.clean_text = clean_text
+        #print(self.clean_text)
         # Regular expression pattern for DL card identifiers
         self.dl_regex = r"\b(?:union|driving|motor)\b"
 

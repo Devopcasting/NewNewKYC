@@ -173,6 +173,7 @@ class PassportDocumentInfo:
             matching_line_index = None
             matching_text_regex =  r"\b(?:surname|suname|surmame|sumame|ssurmame|weesenet|canam|sumsme|senane|surnane)\b"
 
+            print(self.coordinates)
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if re.search(matching_text_regex, text.lower(), flags=re.IGNORECASE):
@@ -215,7 +216,7 @@ class PassportDocumentInfo:
             given_name_cords = []
             matching_line_index = None
             given_name_coordinates = []
-            matching_text_regex =  r"\b(?:given|giver|igiven|ghee|grven|geen)\b"
+            matching_text_regex =  r"\b(?:given|giver|igiven|ghee|grven|geen|glen)\b"
         
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
@@ -226,22 +227,19 @@ class PassportDocumentInfo:
                 return result
         
             """get the coordinates"""
-            print(self.coordinates)
-            matching_given_regex = r"\b(?:given|giver|igiven|ghee|grven|name|geen|hote|ga|seouse|norms|namen)\b"
+            matching_given_regex = r"\b(?:given|giver|igiven|ghee|grven|name|geen|hote|ga|seouse|norms|namen|glen)\b"
             for i in range(matching_line_index, len(self.coordinates)):
                 text = self.coordinates[i][4]
                 if text.lower() in ["eo","of","pat","ste","fam","wessex","ea", "ms", "fi", "ee", 
                                     "fort", "wef", "ly", "fin", "/sex", "sax","indian","wen",
                                     "wanfafa","dore","fier","sex","pl","ie","i3ex","wafers",
-                                    "pepo","or","ent","seal","fer","reiaar", "nationailty", "et", "bg"]:
+                                    "pepo","or","ent","seal","fer","reiaar", "nationailty", "et", "bg", "ange", "bir","indian"]:
                     break
-                if text.isupper() or text[0].isupper() and text.lower() != "gra":
+                if text.isupper() or text[0].isupper() and text.lower() not in ["gra", "glen", "heoecgap"]:
                     if not re.search(matching_given_regex, text.lower(), flags=re.IGNORECASE):
                         given_name_cords.append([self.coordinates[i][0], self.coordinates[i][1], self.coordinates[i][2], self.coordinates[i][3]])
                         given_name_text += " "+text
             
-            print(given_name_text)
-            print(given_name_cords)
             if len(given_name_cords) > 1:
                 given_name_cords = given_name_cords[:-1]
 

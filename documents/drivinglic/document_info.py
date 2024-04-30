@@ -104,7 +104,7 @@ class DrivingLicenseDocumentInfo:
 
             """get the coordinates"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
-                if len(text) == 6 and text.isdigit():
+                if len(text) in (6,7) and text[:6].isdigit():
                     pincode_coords.append([x1, y1, x2, y2])
                     pincode_number += " "+text
                     break
@@ -172,13 +172,16 @@ class DrivingLicenseDocumentInfo:
                 return result
 
             """get the coordinates"""
+            print(self.coordinates[matching_text_index])
+            print(self.coordinates)
             for i in range(matching_text_index + 1, len(self.coordinates)):
                 text = self.coordinates[i][4]
-                if text.lower() in ['s/dmw', 'dmw', 's/', 'union', 'of', 'india']:
+                if text.lower() in ['s/dmw', 'dmw', 's/', 'union', 'of', 'india',"date","birth", '“on/Daughter/Wife', "wife", "son"]:
                     break
-                name_coords.append([x1, y1, x2, y2])
+                name_coords.append([self.coordinates[i][0], self.coordinates[i][1], self.coordinates[i][2], self.coordinates[i][3] ])
                 name_text += " "+text
         
+            print(name_coords)
             if len(name_coords) > 1:
                 result = {
                     "Driving License Name": name_text,
@@ -189,6 +192,7 @@ class DrivingLicenseDocumentInfo:
                     "Driving License Name": name_text,
                     "coordinates": [[name_coords[0][0], name_coords[0][1], name_coords[0][2], name_coords[0][3]]]
                 }
+            print(result)
             return result
         except Exception as error:
             self.logger.error(f"| Driving License Name: {error}")
@@ -200,7 +204,7 @@ class DrivingLicenseDocumentInfo:
             "coordinates": []
         }
         try:
-            matching_text = r"\b(?:son|daughter)\b"
+            matching_text = r"\b(?:son|daughter|wife)\b"
             sdw_name = ""
             sdw_name_coordinates = []
             matching_text_index = None
@@ -213,13 +217,15 @@ class DrivingLicenseDocumentInfo:
             if matching_text_index is None:
                 return result
             
+            
             """get the coordinates"""
             for i in range(matching_text_index + 1, len(self.coordinates)):
                 text = self.coordinates[i][4]
                 if text.isupper() and text.isalpha():
-                    sdw_name_coordinates.append([x1, y1, x2, y2])
+                    sdw_name_coordinates.append([self.coordinates[i][0], self.coordinates[i][1], self.coordinates[i][2], self.coordinates[i][3] ])
                     sdw_name += " "+text
                     break
+
             if not sdw_name_coordinates:
                 return result
             
@@ -233,6 +239,7 @@ class DrivingLicenseDocumentInfo:
                     "Driving License SDW Name": sdw_name,
                     "coordinates": [[sdw_name_coordinates[0][0], sdw_name_coordinates[0][1], sdw_name_coordinates[0][2], sdw_name_coordinates[0][3]]]
                 }
+            print(result)
             return result
         except Exception as e:
             self.logger.error(f"| Driving License SDW Name: {e} ")

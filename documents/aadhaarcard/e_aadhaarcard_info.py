@@ -27,11 +27,12 @@ class EAadhaarCardDocumentInfo:
         self.logger = log_config.configure_logger()
     
     def _extract_text_coordinates(self):
+        tesseract_config = r'--oem 3 --psm 11'
         self.coordinates = TextCoordinates(self.document_path, lang_type=None).generate_text_coordinates()
+        self.text_data_none = pytesseract.image_to_string(self.document_path, lang="eng", config=tesseract_config)
         self.coordinates_default = TextCoordinates(self.document_path, lang_type="default").generate_text_coordinates()
         self.coordinates_regional = TextCoordinates(self.document_path, lang_type="regional").generate_text_coordinates()
         self.text_data_default = pytesseract.image_to_string(self.document_path)
-        tesseract_config = r'--oem 3 --psm 11'
         self.text_data_regional = pytesseract.image_to_string(self.document_path, lang="hin+eng", config=tesseract_config)
         
         
@@ -46,6 +47,7 @@ class EAadhaarCardDocumentInfo:
             dob_coords = []
             date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}|\d{4}|\d{2}/\d{4}|\d{2}/\d{2}|\d{4}/\d{4}'
 
+            print(self.coordinates_default)
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 match = re.search(date_pattern, text) or re.search(r'\d{8}', text)
                 if match:
@@ -59,6 +61,7 @@ class EAadhaarCardDocumentInfo:
                         dob_text += " "+ text
                         
             if not dob_coords:
+                print(self.coordinates)
                 """Check with other coordinates"""
                 for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates):
                     match = re.search(date_pattern, text) or re.search(r'\d{8}', text)
@@ -120,7 +123,7 @@ class EAadhaarCardDocumentInfo:
             
             """Get the matching index number of gender"""
             for i ,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale", "fertale", "malo", "femsle", "fade"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale", "fertale", "malo", "femsle", "fade", "ferme", "famate"]:
                     if coordinates[i -1][4] == "/":
                         gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], x2, y2]
                         gender_text = text
@@ -134,7 +137,7 @@ class EAadhaarCardDocumentInfo:
                 
                 """Try with self.coordinates"""
                 for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                    if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale", "malo","femsle", "fade"]:
+                    if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale", "malo","femsle", "fade", "ferme", "famate"]:
                         if coordinates[i -1][4] == "/":
                             gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], x2, y2]
                             gender_text = text
@@ -168,13 +171,13 @@ class EAadhaarCardDocumentInfo:
 
             """Get the gender index"""
             for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate","femsle","#femste","fomale", "fertale", "malo", "fade"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate","femsle","#femste","fomale", "fertale", "malo", "fade", "ferme", "famate"]:
                     matching_index = i
                     break
             if matching_index is None:
                 coordinates = self.coordinates_default
                 for i,(x1, y1, x2, y2, text) in enumerate(coordinates):
-                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale", "malo","femsle", "fade"]:
+                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale", "malo","femsle", "fade", "ferme", "famate"]:
                         matching_index = i
                         break
                 if matching_index is None:
@@ -219,23 +222,29 @@ class EAadhaarCardDocumentInfo:
             matching_text_top = []
             matching_text_bottom = []
 
-            clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
-            print(clean_text)
-            def contains_keyword(text, keywords):
-                for keyword in keywords:
-                    if keyword.lower() in text.lower():
-                        return True
-                return False
+            #clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
+            clean_text = [i for i in self.text_data_none.split("\n") if len(i) != 0]
+            
+            # def contains_keyword(text, keywords):
+            #     for keyword in keywords:
+            #         if keyword.lower() in text.lower():
+            #             return True
+            #     return False
             
             """Get Name from Top"""
             match_1_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to.","jo"]
             match_to_keywords = ["ta", "to", "to,", "to.", "tahar","jo"]
+            print(clean_text)
             for i, text in enumerate(clean_text):
-                if contains_keyword(text, match_1_keywords):
+                if text.lower() in match_1_keywords:
                     if clean_text[i + 1].lower() in match_to_keywords:
-                        matching_text_top = clean_text[i + 1].split()
-                    else:
                         matching_text_top = clean_text[i + 3].split()
+                    else:
+                        keywords_regex = r"\b(?:aadhaar|proof|proot|identity|citizenship)\b"
+                        if re.search(keywords_regex, clean_text[i + 1], flags=re.IGNORECASE):
+                            matching_text_top = clean_text[i + 3].split()
+                        else:
+                            matching_text_top = clean_text[i + 1].split()
                     break
 
             """Get the coordinates"""
@@ -248,9 +257,10 @@ class EAadhaarCardDocumentInfo:
                         name_coordinates.append([x1, y1, x2, y2])
             
             """Get Name from Bottom"""
-            match_2_keywords = ["year", "dob", "birth", "bith","binh","dou"]
+            keywords_regex = r"\b(?:dob|birth|bith|year|dou|binh|008|pub|farce|binn|yoas|dou|doe)\b"
+            #match_2_keywords = ["year", "dob", "birth", "bith","binh","dou","doe", "fest", "fahy"]
             for i, text in enumerate(clean_text):
-                if contains_keyword(text, match_2_keywords):
+                if re.search(keywords_regex, text.lower(), flags=re.IGNORECASE):
                     if len(clean_text[i -1]) == 1:
                         matching_text_bottom = clean_text[i -2].split()
                     else:
@@ -262,9 +272,8 @@ class EAadhaarCardDocumentInfo:
             
             """Get the coordinates"""
             if len(matching_text_bottom) > 1:
-                matching_text_bottom = matching_text_bottom[: -1]
+                matching_text_bottom = matching_text_bottom[:-1]
 
-            print(matching_text_bottom)
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if text in matching_text_bottom:
                     name_coordinates.append([x1, y1, x2, y2])
@@ -277,57 +286,8 @@ class EAadhaarCardDocumentInfo:
             result = {
                 "E-Aadhaar Name in English": matching_text,
                 "coordinates": name_coordinates
-            }
+                }
             return result
-            # """Clean the data text"""
-            # clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
-
-            # """Get the above matching text"""
-            # matching_text = []
-            # match_1_keywords = ["dob", "birth", "bith", "year", "binh"]
-            # for i,text in enumerate(clean_text):
-            #     if any(keyword in text.lower() for keyword in match_1_keywords):
-            #         if len(clean_text[i - 1]) == 1:
-            #             matching_text = clean_text[i - 2].split()
-            #         else:
-            #             matching_text = clean_text[i - 1].split()
-            #         break
-                
-            # if not matching_text:
-            #     """Check if name is avilable after 'To' """
-            #     match_2_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to."]
-            #     for i, text in enumerate(clean_text):
-            #         if any(keyword in text.lower() for keyword in match_2_keywords):
-            #             matching_text_index = i
-            #             break
-            #     if matching_text_index is None:
-            #         return result
-    
-            #     for i in range(matching_text_index + 1, len(clean_text)):
-            #          words = clean_text[i].split()
-            #          all_lower = any(map(lambda word: word.islower(), words))
-            #          if all_lower:
-            #              continue
-            #          check_first_chars_capital = lambda s: all(word[0].isupper() for word in re.findall(r'\b\w+', s))
-            #          if check_first_chars_capital and clean_text[i].lower() not in match_2_keywords:
-            #              matching_text = clean_text[i].split()
-            #              break
-            #     if not matching_text:
-            #         return result
-            
-            # if len(matching_text) > 1:
-            #     matching_text = matching_text[:-1]
-            
-            # """Get the coordinates"""
-            # for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates):
-            #     if text in matching_text:
-            #         name_coordinates.append([x1,y1,x2,y2])
-            
-            # result = {
-            #     "E-Aadhaar Name in English": " ".join(matching_text),
-            #     "coordinates": name_coordinates
-            # }
-            # return result
         except Exception as e:
             self.logger.error(f"| E-Aadhaar Name in English: {e}")
             return result
@@ -343,19 +303,13 @@ class EAadhaarCardDocumentInfo:
             matching_text_top = []
             matching_text_bottom = []
 
-            clean_text_default = [i for i in self.text_data_default.split("\n") if len(i) != 0]
-            
-            def contains_keyword(text, keywords):
-                for keyword in keywords:
-                    if keyword.lower() in text.lower():
-                        return True
-                return False
-            
+            clean_text_default = [i for i in self.text_data_none.split("\n") if len(i) != 0]
+            #clean_text_default = [i for i in self.text_data_default.split("\n") if len(i) != 0]
             """Get Name from Top"""
             match_1_keywords = ["tahar", "to", "to,", "ta", "to.","jo"]
             for i, text in enumerate(clean_text_default):
-                if contains_keyword(text, match_1_keywords):
-                    matching_text_top = clean_text_default[i + 1].split()
+                if text.lower() in match_1_keywords:
+                    matching_text_top = clean_text_default[i + 2].split()
                     break
             
             """Get the Coordinates"""
@@ -364,12 +318,13 @@ class EAadhaarCardDocumentInfo:
                     top_matching_text = " ".join(matching_text_top)
                     matching_text_top = matching_text_top[:-1]
                 
-                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
+                for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                     if text in matching_text_top:
                         name_coordinates.append([x1, y1, x2, y2])
             
             """Get Name from Bottom"""
-            keywords_regex = r"\b(?:dob|birth|bith|year|dou|binh|008|pub|farce|binn)\b"
+            keywords_regex = r"\b(?:dob|birth|bith|year|dou|binh|008|pub|farce|binn|yoas|dou|doe)\b"
+            #keywords_regex = r"\b(?:dob|birth|bith|year|dou|binh|008|pub|farce|binn|yoas)\b"
             for i,text in enumerate(clean_text_default):
                 if re.search(keywords_regex, text.lower(), flags=re.IGNORECASE):
                     matching_text_bottom = clean_text_default[i -2].split()
@@ -383,55 +338,10 @@ class EAadhaarCardDocumentInfo:
                 bottom_matching_text = " ".join(matching_text_bottom)
                 matching_text_bottom = matching_text_bottom[:-1]
             
-            for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
+            for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if text in matching_text_bottom:
                     name_coordinates.append([x1, y1, x2, y2])
 
-
-            # """Get name from below section"""
-            # """Clean the data text"""
-            # clean_text = [i for i in self.text_data_regional.split("\n") if len(i) != 0]
-            # print(clean_text)
-            # """Get the above matching text"""
-            # matching_text = []
-            # keywords_regex = r"\b(?:dob|birth|bith|year|binh|008|pub|farce|binn)\b"
-            
-            # for i,text in enumerate(clean_text):
-            #     if re.search(keywords_regex, text.lower(), flags=re.IGNORECASE):
-            #          matching_text = clean_text[i - 2].split()
-            #          break
-
-            # print(matching_text)
-            # if matching_text:      
-            #     if len(matching_text) > 1:
-            #         matching_text = matching_text[:-1]
-            
-            #     """Get the coordinates"""
-            #     for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
-            #         if text in matching_text:
-            #             name_coordinates.append([x1, y1, x2, y2])
-            
-            # """Get name from above section"""
-            # """Check if name is avilable after 'To' """
-            # clean_text_default = [i for i in self.text_data_default.split("\n") if len(i) != 0]
-            # match_2_keywords = ["tahar", "to", "to,", "ta", "to."]
-            # match_2_text = []
-            
-            # for i, text in enumerate(clean_text_default):
-            #     if any(keyword in text.lower() for keyword in match_2_keywords):
-            #         match_2_text = clean_text_default[i + 1]
-            #         break
-            
-            # if not matching_text and match_2_text:
-            #     return result
-            
-            # if match_2_text:
-            #     if len(match_2_text) > 1:
-            #         match_2_text = match_2_text[:-1]
-            #     for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
-            #         if text in match_2_text:
-            #             name_coordinates.append([x1, y1, x2, y2])
-            
             if matching_text_top:
                 matching_text = top_matching_text
             else:
@@ -523,7 +433,7 @@ class EAadhaarCardDocumentInfo:
             """get the coordinates"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 for state_pattern in self.states:
-                    if re.search(state_pattern, text, re.IGNORECASE) and text.lower() != "sitrongs" and text.lower() != "electronically":
+                    if re.search(state_pattern, text, re.IGNORECASE) and text.lower() not in ["electronically", 'electronica.ly', 'sitrongs']:
                         place_coordinates.append([x1, y1, x2, y2])
                         place_name += " "+ text
                         
@@ -590,6 +500,7 @@ class EAadhaarCardDocumentInfo:
 
                 """Collect Name in english"""
                 name_in_eng = self._extract_name_in_english()
+                
                 e_aadhaarcard_doc_info_list.append(name_in_eng)
 
                 """Collect Name in native"""
