@@ -47,7 +47,6 @@ class EAadhaarCardDocumentInfo:
             dob_coords = []
             date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}|\d{4}|\d{2}/\d{4}|\d{2}/\d{2}|\d{4}/\d{4}'
 
-            print(self.coordinates_default)
             for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 match = re.search(date_pattern, text) or re.search(r'\d{8}', text)
                 if match:
@@ -61,7 +60,6 @@ class EAadhaarCardDocumentInfo:
                         dob_text += " "+ text
                         
             if not dob_coords:
-                print(self.coordinates)
                 """Check with other coordinates"""
                 for i, (x1, y1, x2, y2, text) in enumerate(self.coordinates):
                     match = re.search(date_pattern, text) or re.search(r'\d{8}', text)
@@ -225,16 +223,11 @@ class EAadhaarCardDocumentInfo:
             #clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
             clean_text = [i for i in self.text_data_none.split("\n") if len(i) != 0]
             
-            # def contains_keyword(text, keywords):
-            #     for keyword in keywords:
-            #         if keyword.lower() in text.lower():
-            #             return True
-            #     return False
             
             """Get Name from Top"""
             match_1_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to.","jo"]
             match_to_keywords = ["ta", "to", "to,", "to.", "tahar","jo"]
-            print(clean_text)
+            
             for i, text in enumerate(clean_text):
                 if text.lower() in match_1_keywords:
                     if clean_text[i + 1].lower() in match_to_keywords:

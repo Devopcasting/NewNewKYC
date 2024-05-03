@@ -78,7 +78,6 @@ class AadhaarCardDocumentInfo:
         try:
             gender_text = ""
             gender_coordinates = []
-            print(self.coordinates_default)
             gender_pattern = r"male|female|femala|mala"
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 if re.search(gender_pattern, text, flags=re.IGNORECASE):
@@ -183,7 +182,7 @@ class AadhaarCardDocumentInfo:
 
             """split the text into lines"""
             lines = [i for i in self.text_data_default.splitlines() if len(i) != 0]
-            print(lines)
+            
             """regex patterns"""
             dob_pattern = re.compile(r"DOB", re.IGNORECASE)
             date_pattern = re.compile(r"\d{1,2}/\d{1,2}/\d{4}")
@@ -193,17 +192,20 @@ class AadhaarCardDocumentInfo:
             keywords_regex = r"\b(?:of|india|female|male)\b"
             for i, item in enumerate(lines):
                 if "dOBOS" not in item and (dob_pattern.search(item) or date_pattern.search(item) or year_pattern.search(item)):
-                    if re.search(keywords_regex)
-                    name_text = lines[i - 1]
-                    break
+                    if re.search(keywords_regex, item, flags=re.IGNORECASE):
+                        name_text = lines[i - 1]
+                        break
             
-            print(name_text)
             if not name_text:
                 return result
         
+            
             """split the name"""
             name_text_split = name_text.split()
             clean_name_text =[s for s in name_text_split if any(char.isalpha() for char in s)]
+            
+            if not clean_name_text:
+                return result
             
             if len(clean_name_text) > 1:
                 clean_name_text = clean_name_text[:-1]
@@ -245,13 +247,12 @@ class AadhaarCardDocumentInfo:
             coordinates = self.coordinates_default
             
             """split the text into lines"""
-            
             lines = [i for i in text_data.splitlines() if len(i) != 0]
             
             """get the matching text index"""
-            gender_pattern = r"male|female|femala|mala|femate|fomale|femalp"
+            gender_pattern_regex = r"\b(?:male|female|femala|mala|femate|fomale|femalp)\b"
             for i, item in enumerate(lines):
-                if re.search(gender_pattern, item, flags=re.IGNORECASE):
+                if re.search(gender_pattern_regex, item, flags=re.IGNORECASE):
                     name_text = lines[i - 3]
                     break
             
@@ -261,6 +262,8 @@ class AadhaarCardDocumentInfo:
             """split the name"""
             name_text_split = name_text.split()
             clean_name_text =[s for s in name_text_split if any(char.isalpha() for char in s)]
+            if not clean_name_text:
+                return result
             
             if len(clean_name_text) > 1:
                 clean_name_text = clean_name_text[:-1]

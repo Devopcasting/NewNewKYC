@@ -172,8 +172,6 @@ class DrivingLicenseDocumentInfo:
                 return result
 
             """get the coordinates"""
-            print(self.coordinates[matching_text_index])
-            print(self.coordinates)
             for i in range(matching_text_index + 1, len(self.coordinates)):
                 text = self.coordinates[i][4]
                 if text.lower() in ['s/dmw', 'dmw', 's/', 'union', 'of', 'india',"date","birth", '“on/Daughter/Wife', "wife", "son"]:
@@ -181,7 +179,6 @@ class DrivingLicenseDocumentInfo:
                 name_coords.append([self.coordinates[i][0], self.coordinates[i][1], self.coordinates[i][2], self.coordinates[i][3] ])
                 name_text += " "+text
         
-            print(name_coords)
             if len(name_coords) > 1:
                 result = {
                     "Driving License Name": name_text,
@@ -192,7 +189,6 @@ class DrivingLicenseDocumentInfo:
                     "Driving License Name": name_text,
                     "coordinates": [[name_coords[0][0], name_coords[0][1], name_coords[0][2], name_coords[0][3]]]
                 }
-            print(result)
             return result
         except Exception as error:
             self.logger.error(f"| Driving License Name: {error}")
@@ -239,7 +235,6 @@ class DrivingLicenseDocumentInfo:
                     "Driving License SDW Name": sdw_name,
                     "coordinates": [[sdw_name_coordinates[0][0], sdw_name_coordinates[0][1], sdw_name_coordinates[0][2], sdw_name_coordinates[0][3]]]
                 }
-            print(result)
             return result
         except Exception as e:
             self.logger.error(f"| Driving License SDW Name: {e} ")

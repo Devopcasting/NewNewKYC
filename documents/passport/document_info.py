@@ -173,7 +173,7 @@ class PassportDocumentInfo:
             matching_line_index = None
             matching_text_regex =  r"\b(?:surname|suname|surmame|sumame|ssurmame|weesenet|canam|sumsme|senane|surnane)\b"
 
-            print(self.coordinates)
+            
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if re.search(matching_text_regex, text.lower(), flags=re.IGNORECASE):
