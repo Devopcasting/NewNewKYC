@@ -39,7 +39,7 @@ class FilterInProgressStatusDocuments:
                         self.insert_in_progress_status_doc_info(document)
                     else:
                         self._update_status_invalid_file(document['taskId'], document['uploadDir'])
-                        #self._webhook_post_request(document['taskId'])
+                        self._webhook_post_request(document['taskId'])
                 sleep(5)
         except Exception as e:
             self.logger.error(f"| While querying IN_PROGRESS status: {e}")
