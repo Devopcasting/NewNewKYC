@@ -56,7 +56,7 @@ class PerformOCRROnDocuments:
             self._remove_collection_doc_from_workspace_ocrr(self.document_info['taskId'])
 
             """Send POST request to WebHOOK"""
-            #self._webhook_post_request(self.document_info['taskId'])
+            self._webhook_post_request(self.document_info['taskId'])
         except Exception as e:
             self.logger.error(f"| Performing OCRR: {e}")
     
