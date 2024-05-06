@@ -41,7 +41,7 @@ class PancardDocumentInfo:
             pancard_number_coordinates = []
             pancard_coordinates = []
             matching_text_index = None
-            matching_text_regex = r"\b(?:permanent|petmancnt|pe@fanent|pe@ffignent|pertianent|account|number|card|perenent|accoun|pormanent|petraancnt)\b"
+            matching_text_regex = r"\b(?:permanent|petmancnt|pe@fanent|pe@ffignent|pertianent|pereierent|account|number|card|perenent|accoun|pormanent|petraancnt)\b"
             contains_digit_and_alpha = lambda s: any(char.isdigit() for char in s) and any(char.isalpha() for char in s)
 
             """Find matching text regex and its index"""
@@ -58,14 +58,20 @@ class PancardDocumentInfo:
             """Get the coordinates of pancard cards"""
             for i in search_range:
                 text = self.coordinates[i][4]
-                if len(text) in (7, 10) and text.isupper() and contains_digit_and_alpha(text):
+                if len(text) in (7, 9, 10) and text.isupper() and contains_digit_and_alpha(text):
+                    pancard_number_text += " " + text
+                    pancard_number_coordinates.append([self.coordinates[i][0], self.coordinates[i][1], self.coordinates[i][2], self.coordinates[i][3]])
+                elif len(text) in (7, 9, 10) and contains_digit_and_alpha(text):
                     pancard_number_text += " " + text
                     pancard_number_coordinates.append([self.coordinates[i][0], self.coordinates[i][1], self.coordinates[i][2], self.coordinates[i][3]])
 
             if not pancard_number_coordinates:
                 """Try with other coordinates"""
                 for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_try1):
-                    if len(text) in (7,10) and text.isupper() and contains_digit_and_alpha(text):
+                    if len(text) in (7, 9, 10) and text.isupper() and contains_digit_and_alpha(text):
+                        pancard_number_text += " "+ text
+                        pancard_number_coordinates.append([self.coordinates_try1[i][0], self.coordinates_try1[i][1], self.coordinates_try1[i][2], self.coordinates_try1[i][3]])
+                    elif len(text) in (7, 9, 10) and contains_digit_and_alpha(text):
                         pancard_number_text += " "+ text
                         pancard_number_coordinates.append([self.coordinates_try1[i][0], self.coordinates_try1[i][1], self.coordinates_try1[i][2], self.coordinates_try1[i][3]])
                 if not pancard_number_coordinates:
@@ -163,7 +169,7 @@ class PancardDocumentInfo:
             "coordinates": []
         }
         try:
-            matching_text_keyword = ["signature", "nature", "asignature","/signature","(signature", "sehat"]
+            matching_text_keyword = ["signature", "nature", "asignature","/signature","(signature", "sehat", "signatite"]
             pancard_signature_coordinates = []
             pattern = self._identify_pancard_patterns()
 

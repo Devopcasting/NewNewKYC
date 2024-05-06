@@ -1,5 +1,6 @@
 import re
 from ocrr_log_mgmt.ocrr_log import OCRREngineLogging
+from datetime import datetime
 
 class PancardPattern2:
     def __init__(self, text_coordinates, data_text, label: str) -> None:
@@ -108,30 +109,42 @@ class PancardPattern2:
 
             """Create Reverse list"""
             reverse_line_list = split_text_list[::-1]
-
+            
             """Matching patterns"""
-            date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}'
+            #date_pattern = r'\d{2}/\d{2}/\d{4}|\d{2}-\d{2}-\d{4}'
+            date_pattern = r'(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}|(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}'
             matching_pattern = r"bonn|birth"
 
             for i, text in enumerate(reverse_line_list):
                 match_dob = re.search(date_pattern, text)
+                if match_dob:
+                    date_str = match_dob.group()
+                    if self.__is_valid_date(date_str):
+                        if len(reverse_line_list[i + 1]) == 1:
+                            matching_text_index = i + 2
+                            break
+                        else:
+                            matching_text_index = i + 1
+
                 match_pattern = re.search(matching_pattern, text, flags=re.IGNORECASE)
-                if match_dob or match_pattern:
+                if match_pattern:
                     if len(reverse_line_list[i + 1]) == 1:
                         matching_text_index = i + 2
                         break
                     else:
                         matching_text_index = i + 1
                         break
+
             if matching_text_index is None:
                 return result
             
             """Get the coordinates"""
             for text in reverse_line_list[matching_text_index :]:
-                if text.isupper():
+                if text.isupper() and text.lower() not in ["a", "baus" ]:
                     pancard_name_text += " "+ text
                     matching_text_list = text.split()
                     break
+
             if not matching_text_list:
                 return result
             
@@ -165,3 +178,14 @@ class PancardPattern2:
                 if k in line:
                     return i
         return 404
+    
+    def __is_valid_date(self, date_string: str) -> bool:
+        try:
+            datetime.strptime(date_string, '%d/%m/%Y')
+            return True
+        except ValueError:
+            try:
+                datetime.strptime(date_string, '%d-%m-%Y')
+                return True
+            except ValueError:
+                return False
