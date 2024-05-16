@@ -6,7 +6,7 @@ class IdentifyPassportDocument:
         #print(self.clean_text)
         # Regular expression pattern for Passport identifiers
         #self.passport_regex = r"\b(?:republic|pusepart|jpassport|passport|passpon|ipassport|overseas|citizen|bissport|passoars|passportno|paeupari)\b"
-        self.passport_regex = r"(?:republic|posspau|pusepart|passgert|jpassport|pasaport|passport|passpon|ipassport|overseas|citizen|bissport|passoars|passportno|paeupari|paasport| given name| given neme)"
+        self.passport_regex = r"(?:republic|posspau|pusepart|basepent|passgert|jpassport|pasaport|passport|passpon|ipassport|overseas|citizen|bissport|passoars|passportno|paeupari|paasport| given name| given neme)"
 
     def check_passport_document(self) -> bool:
         for text in self.clean_text:

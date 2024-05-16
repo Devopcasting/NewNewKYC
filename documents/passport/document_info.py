@@ -37,9 +37,9 @@ class PassportDocumentInfo:
         try:
             passport_number = ""
             matching_line_index = None
-            matching_text_regex =  r"\b(?:jpassport|passport|pusepart|passpon|paasport|ipassport|pasaport|posspau|passgert)\b"
+            matching_text_regex =  r"\b(?:jpassport|passport|pusepart|passpon|basepent|paasport|ipassport|pasaport|posspau|passgert)\b"
             passport_number_coordinates = []
-
+            
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 if re.search(matching_text_regex, text.lower(), flags=re.IGNORECASE):
@@ -171,8 +171,7 @@ class PassportDocumentInfo:
             surname_coords = []
             surname_coordinates = []
             matching_line_index = None
-            matching_text_regex =  r"\b(?:surname|suname|surmame|sumame|ssurmame|weesenet|canam|sumsme|senane|surnane)\b"
-
+            matching_text_regex =  r"\b(?:surname|suname|surmame|sumama|sumame|ssurmame|weesenet|canam|sumsme|senane|surnane)\b"
             
             """find matching text index"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
@@ -233,7 +232,8 @@ class PassportDocumentInfo:
                 if text.lower() in ["eo","of","pat","ste","fam","wessex","ea", "ms", "fi", "ee", 
                                     "fort", "wef", "ly", "fin", "/sex", "sax","indian","wen",
                                     "wanfafa","dore","fier","sex","pl","ie","i3ex","wafers",
-                                    "pepo","or","ent","seal","fer","reiaar", "nationailty", "et", "bg", "ange", "bir","indian"]:
+                                    "pepo","or","ent","seal","fer","reiaar", "nationailty", "et",
+                                      "bg", "ange", "bir","indian","ae","os","by"]:
                     break
                 if text.isupper() or text[0].isupper() and text.lower() not in ["gra", "glen", "heoecgap"]:
                     if not re.search(matching_given_regex, text.lower(), flags=re.IGNORECASE):
@@ -458,7 +458,7 @@ class PassportDocumentInfo:
         try:
             state_name = ""
             state_coordinates = []
-            
+            print(self.coordinates_default)
             """get the coordinates"""
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 for state_pattern in self.states:
