@@ -363,7 +363,24 @@ indian_states_cities = [
     "Delhl",
     "BEDAR",
     "Muinbai",
+    "mubal",
+    "mumbai"
     "Bhilai",
     "LOMDON",
-    "CHHINDWARA"
+    "CHHINDWARA",
+    "Bhayander",
+    "Goregaon",
+    "Murbal",
+    "Matiarashtra",
+    "Mallaswa",
+    "Malleswaram",
+    "Karnatnks",
+    "jaleswarar",
+    "Boxivall",
+    "Mumbei",
+    "BORIVALI",
+    "DELHL",
+    "faShaikpet",
+    "Shatkpet",
+    "Shaikpet"
     ]
