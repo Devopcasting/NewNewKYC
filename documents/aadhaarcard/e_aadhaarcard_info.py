@@ -121,7 +121,7 @@ class EAadhaarCardDocumentInfo:
             
             """Get the matching index number of gender"""
             for i ,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste","fomale", "fertale", "malo", "femsle", "fade", "ferme", "famate"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala","mate","femate", "#femste","fomale", "fertale", "malo", "femsle", "fade", "ferme", "famate"]:
                     if coordinates[i -1][4] == "/":
                         gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], x2, y2]
                         gender_text = text
@@ -129,13 +129,12 @@ class EAadhaarCardDocumentInfo:
                         gender_coordinates = [coordinates[i -1][0], coordinates[i -1][1], x2, y2]
                         gender_text = text     
                     break
-
             if not gender_coordinates:
+
                 coordinates = self.coordinates
-                
                 """Try with self.coordinates"""
                 for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                    if text.lower() in  ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale", "malo","femsle", "fade", "ferme", "famate"]:
+                    if text.lower() in  ["male", "female", "femalp", "femala", "mala","mate","femate", "#femste", "fomale", "fertale", "malo","femsle", "fade", "ferme", "famate"]:
                         if coordinates[i -1][4] == "/":
                             gender_coordinates = [coordinates[i -2][0], coordinates[i -2][1], x2, y2]
                             gender_text = text
@@ -169,13 +168,13 @@ class EAadhaarCardDocumentInfo:
 
             """Get the gender index"""
             for i,(x1,y1,x2,y2,text) in enumerate(coordinates):
-                if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate","femsle","#femste","fomale", "fertale", "malo", "fade", "ferme", "famate"]:
+                if text.lower() in ["male", "female", "femalp", "femala", "mala","mate","femate","femsle","#femste","fomale", "fertale", "malo", "fade", "ferme", "famate"]:
                     matching_index = i
                     break
             if matching_index is None:
                 coordinates = self.coordinates_default
                 for i,(x1, y1, x2, y2, text) in enumerate(coordinates):
-                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "femate", "#femste", "fomale", "fertale", "malo","femsle", "fade", "ferme", "famate"]:
+                    if text.lower() in ["male", "female", "femalp", "femala", "mala", "mate", "femate", "#femste", "fomale", "fertale", "malo","femsle", "fade", "ferme", "famate"]:
                         matching_index = i
                         break
                 if matching_index is None:
@@ -222,11 +221,10 @@ class EAadhaarCardDocumentInfo:
 
             #clean_text = [i for i in self.text_data_default.split("\n") if len(i) != 0]
             clean_text = [i for i in self.text_data_none.split("\n") if len(i) != 0]
-            
-            
+            print(clean_text)
             """Get Name from Top"""
-            match_1_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to.","jo"]
-            match_to_keywords = ["ta", "to", "to,", "to.", "tahar","jo"]
+            match_1_keywords = ["ace", "ta", "ata arate tahar", "ata", "arate", "tahar", "to", "to,", "ta", "to.","jo","ua dat tka"]
+            match_to_keywords = ["ta", "to", "to,", "to.", "tahar","jo","tka","ua dat tka"]
             
             for i, text in enumerate(clean_text):
                 if text.lower() in match_1_keywords:
@@ -239,7 +237,6 @@ class EAadhaarCardDocumentInfo:
                         else:
                             matching_text_top = clean_text[i + 1].split()
                     break
-
             """Get the coordinates"""
             if matching_text_top:
                 if len(matching_text_top) > 1:
@@ -248,7 +245,23 @@ class EAadhaarCardDocumentInfo:
                 for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                     if text in matching_text_top:
                         name_coordinates.append([x1, y1, x2, y2])
-            
+
+            """Try again for Name from Top"""
+            if not matching_text_top:
+                top_name_regex = r"\b(?:Aadhaar is a proof of identity, not of citizenship)\b"
+                for i, text in enumerate(clean_text):
+                    if re.search(top_name_regex, text, flags=re.IGNORECASE):
+                        matching_text_top = clean_text[i + 1].split()
+                        break
+
+                """Try again Get coordinates of Top Name"""
+                if matching_text_top:
+                    if len(matching_text_top) > 1:
+                        matching_text_top = matching_text_top[: -1]
+                    for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
+                        if text in matching_text_top:
+                            name_coordinates.append([x1, y1, x2, y2])
+
             """Get Name from Bottom"""
             keywords_regex = r"\b(?:dob|birth|bith|year|dou|binh|008|pub|farce|binn|yoas|dou|doe)\b"
             #match_2_keywords = ["year", "dob", "birth", "bith","binh","dou","doe", "fest", "fahy"]
@@ -259,7 +272,18 @@ class EAadhaarCardDocumentInfo:
                     else:
                         matching_text_bottom = clean_text[i -1].split()
                     break
-            
+
+            if not matching_text_bottom:
+                bottom_name_regex = r"\b(?:'Uniquely Wenificationacmony otra')"
+                for i, text in enumerate(clean_text):
+                    if re.search(bottom_name_regex, text.lower(), flags=re.IGNORECASE):
+                        if clean_text[i + 1].isdigit():
+                            matching_text_bottom = clean_text[i + 2].split()
+                        else:
+                            matching_text_bottom = clean_text[i + 1].split()
+                        break
+
+            # Check if both name from top and bottom are empty
             if not matching_text_top and not matching_text_bottom:
                 return result
             
@@ -422,14 +446,14 @@ class EAadhaarCardDocumentInfo:
         try:
             place_name = ""
             place_coordinates = []
-            
             """get the coordinates"""
+            electronic_keyword_regex = r"\b(?:electronica.ly|electronically|sitrongs|elactronically.generated|generated)\b"
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates):
                 for state_pattern in self.states:
-                    if re.search(state_pattern, text, re.IGNORECASE) and text.lower() not in ["electronically", 'electronica.ly', 'sitrongs']:
+                    if re.search(state_pattern, text, re.IGNORECASE) and not re.search(electronic_keyword_regex, text.lower(), flags=re.IGNORECASE):
                         place_coordinates.append([x1, y1, x2, y2])
                         place_name += " "+ text
-                        
+
             if not place_coordinates:
                 return result
         

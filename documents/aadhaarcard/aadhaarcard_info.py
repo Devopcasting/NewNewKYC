@@ -78,27 +78,26 @@ class AadhaarCardDocumentInfo:
         try:
             gender_text = ""
             gender_coordinates = []
-            gender_pattern = r"male|female|femala|mala"
+            gender_pattern = r"male|female|(?:mala|femala|femate|fomale|femalp)"
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
-                if re.search(gender_pattern, text, flags=re.IGNORECASE):
+                if re.search(gender_pattern, text.lower(), flags=re.IGNORECASE):
                     if self.coordinates_default[i -1][4] == "/" or self.coordinates_default[i -1][4] == "|":
                         gender_coordinates.append([self.coordinates_default[i - 2][0], self.coordinates_default[i - 2][1], x2, y2])
                         gender_text = text
                     else:
                         gender_coordinates.append([self.coordinates_default[i - 1][0], self.coordinates_default[i - 1][1], x2, y2])
                         gender_text = text
-                    break
+                    
             if not gender_coordinates:
                 """Try getting the coordinates from coordinates_regional"""
                 for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
-                    if re.search(gender_pattern, text, flags=re.IGNORECASE):
+                    if re.search(gender_pattern, text.lower(), flags=re.IGNORECASE):
                         if self.coordinates_regional[i -1][4] == "/" or self.coordinates_default[i -1][4] == "|":
                             gender_coordinates.append([self.coordinates_regional[i -2][0], self.coordinates_regional[i -2][1], x2, y2])
                             gender_text = text
                         else:
                             gender_coordinates.append([self.coordinates_regional[i -1][0], self.coordinates_regional[i -1][1], x2, y2])
                             gender_text = text
-                        break
                 if not gender_coordinates:
                     return result
             
@@ -124,16 +123,17 @@ class AadhaarCardDocumentInfo:
             UseRegionalCoords = False
 
             """get the index of male/female"""
+            print(self.coordinates_default)
             matching_index = None
-            gender_pattern = r"male|female|femala|mala|femate|fomale|femalp"
+            gender_pattern = r"male|female|(?:mala|femala|femate|mame|fomale|femalp)"
             for i,(x1,y1,x2,y2,text) in enumerate(self.coordinates_default):
-                if re.search(gender_pattern, text, flags=re.IGNORECASE):
+                if re.search(gender_pattern, text.lower(), flags=re.IGNORECASE):
                     matching_index = i
 
             if matching_index is None:
                 """Try getting the index from coordinates_regional"""
                 for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_regional):
-                    if re.search(gender_pattern, text, flags=re.IGNORECASE):
+                    if re.search(gender_pattern, text.lower(), flags=re.IGNORECASE):
                         matching_index = i
                         UseRegionalCoords = True
                 if matching_index is None:
@@ -182,23 +182,42 @@ class AadhaarCardDocumentInfo:
 
             """split the text into lines"""
             lines = [i for i in self.text_data_default.splitlines() if len(i) != 0]
-            
             """regex patterns"""
             dob_pattern = re.compile(r"DOB", re.IGNORECASE)
             date_pattern = re.compile(r"\d{1,2}/\d{1,2}/\d{4}")
             year_pattern = re.compile(r"\d{4}")
             
             """get the matching text index"""
-            keywords_regex = r"\b(?:of|india|female|male)\b"
+            # keywords_regex = r"\b(?:male|female|(?:femalp|femala|mala|femate|#femste|fomale|fertale|malo|femsle|of|india))\b"
+            #keywords_regex = r"\b(?:of|india|female|male|femalp|femala|mala|femate|#femste|fomale|fertale|malo|femsle)\b"
+            # for i, item in enumerate(lines):
+            #     if "dOBOS" not in item and (dob_pattern.search(item) or date_pattern.search(item) or year_pattern.search(item)):
+            #         print(f"FOUND : {item}")
+            #         if re.search(keywords_regex, item, flags=re.IGNORECASE):
+            #             name_text = lines[i - 1]
+            #             break
+
+            # for i, item in enumerate(lines):
+            #     if re.search(keywords_regex, item.lower(), flags=re.IGNORECASE):
+            #         name_text = lines[i - 2]
+            #         break
+            
+            # if not name_text:
+            #     return result
+            print(lines)
+            # First, check for "male" or "female"
+            male_female_pattern = re.compile(r'\b(male|female)\b', re.IGNORECASE)
+            specific_words_pattern = re.compile(r'\b(femalp|femala|mala|mame|femate|#femste|fomale|fertale|malo|femsle|of|india)\b', re.IGNORECASE)
             for i, item in enumerate(lines):
-                if "dOBOS" not in item and (dob_pattern.search(item) or date_pattern.search(item) or year_pattern.search(item)):
-                    if re.search(keywords_regex, item, flags=re.IGNORECASE):
-                        name_text = lines[i - 1]
-                        break
+                if re.search(male_female_pattern, item.lower()):
+                    name_text = lines[i - 2]
+                    break
             
             if not name_text:
-                return result
-        
+                for i, item in enumerate(lines):
+                    if re.search(specific_words_pattern, item.lower()):
+                        name_text = lines[i - 2]
+                        break
             
             """split the name"""
             name_text_split = name_text.split()
@@ -250,7 +269,8 @@ class AadhaarCardDocumentInfo:
             lines = [i for i in text_data.splitlines() if len(i) != 0]
             
             """get the matching text index"""
-            gender_pattern_regex = r"\b(?:male|female|femala|mala|femate|fomale|femalp)\b"
+            gender_pattern_regex = r"\b(?:male|female|of|india|(?:femalp|femala|mala|mame|femate|#femste|fomale|fertale|malo|femsle))\b"
+            #gender_pattern_regex = r"\b(?:male|female|femala|mala|femate|fomale|femalp)\b"
             for i, item in enumerate(lines):
                 if re.search(gender_pattern_regex, item, flags=re.IGNORECASE):
                     name_text = lines[i - 3]
@@ -300,9 +320,10 @@ class AadhaarCardDocumentInfo:
             place_coordinates = []
 
             """get the coordinates"""
+            electronic_keyword_regex = r"\b(?:electronica.ly|electronically|sitrongs|elactronically.generated|generated)\b"
             for i,(x1, y1, x2, y2, text) in enumerate(self.coordinates_default):
                 for state_pattern in self.states:
-                    if re.search(state_pattern, text, re.IGNORECASE):
+                    if re.search(state_pattern, text, re.IGNORECASE) and not re.search(electronic_keyword_regex, text.lower(), flags=re.IGNORECASE):
                         place_coordinates.append([x1, y1, x2, y2])
                         place_name += " "+ text
 
